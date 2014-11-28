@@ -1,5 +1,5 @@
-// Gofuse provides a CGO wrapper for the FUSE low-level API.
-package gofuse
+// Provides a CGO wrapper for the FUSE low-level API.
+package fuse
 
 // #cgo LDFLAGS: -lfuse
 //

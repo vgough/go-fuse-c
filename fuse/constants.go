@@ -1,4 +1,4 @@
-package gofuse
+package fuse
 
 import (
 	"syscall"
