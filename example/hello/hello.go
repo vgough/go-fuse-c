@@ -59,6 +59,23 @@ func (h *HelloFs) Lookup(parent int64, name string) (
 	return fuse.OK, e
 }
 
+func (h *HelloFs) ReadDir(ino int64, off int64, size int, w fuse.DirEntryWriter) fuse.Status {
+	if ino != 1 {
+		return fuse.ENOTDIR
+	}
+
+	if off < 1 {
+		w.Add(".", 1, 0, 1)
+	}
+	if off < 2 {
+		w.Add("..", 1, 0, 2)
+	}
+	if off < 3 {
+		w.Add("hello", 2, 0, 3)
+	}
+	return fuse.OK
+}
+
 func main() {
 	args := os.Args
 	fmt.Println(args)
