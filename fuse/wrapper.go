@@ -50,6 +50,33 @@ func LL_GetAttr(t unsafe.Pointer, ino C.fuse_ino_t, fi *C.struct_fuse_file_info,
 	return C.int(err)
 }
 
+const dirBufGrowSize = 8 * 1024
+
+//export LL_ReadDir
+func LL_ReadDir(t unsafe.Pointer, ino C.fuse_ino_t, size C.size_t, off C.off_t,
+	fi *C.struct_fuse_file_info, db *C.struct_DirBuf) C.int {
+	ops := (*Operations)(t)
+	writer := &dirBuf{db}
+	err := (*ops).ReadDir(int64(ino), int64(off), int(size), writer)
+	return C.int(err)
+}
+
+type DirEntryWriter interface {
+	Add(name string, ino int64, mode int, next int64) bool
+}
+
+type dirBuf struct {
+	db *C.struct_DirBuf
+}
+
+func (d *dirBuf) Add(name string, ino int64, mode int, next int64) bool {
+	// TODO: can we pass pointer to front of name instead of duplicating string?
+	cstr := C.CString(name)
+	res := C.DirBufAdd(d.db, cstr, C.fuse_ino_t(ino), C.int(mode), C.off_t(next))
+	C.free(unsafe.Pointer(cstr))
+	return res == 0
+}
+
 type FileInfo struct {
 	Flags     int
 	Writepage bool
@@ -154,4 +181,5 @@ type Operations interface {
 	Destroy()
 	Lookup(dir int64, name string) (err Status, entry *EntryParam)
 	GetAttr(ino int64, fi *FileInfo) (err Status, attr *Attr)
+	ReadDir(ino int64, off int64, size int, w DirEntryWriter) Status
 }

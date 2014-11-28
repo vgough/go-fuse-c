@@ -3,6 +3,7 @@
 #include "_cgo_export.h"
 
 #include <stdio.h>
+#include <string.h>
 
 void bridge_init(void *userdata, struct fuse_conn_info *conn) {
   LL_Init(userdata, conn);
@@ -65,7 +66,22 @@ void bridge_fsync(fuse_req_t req, fuse_ino_t ino, int datasync,
 void bridge_opendir(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi);
 
 void bridge_readdir(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
-                    struct fuse_file_info *fi) {}
+                    struct fuse_file_info *fi) {
+  void *userdata = fuse_req_userdata(req);
+  struct DirBuf db;
+  db.req = req;
+  db.size = 4096;
+  db.buf = malloc(db.size);
+  db.cur = db.buf;
+  db.remaining = db.size;
+
+  int err = LL_ReadDir(userdata, ino, size, off, fi, &db);
+  if (err != 0) {
+    fuse_reply_err(req, err);
+  } else {
+    fuse_reply_buf(req, db.buf, db.size - db.remaining);
+  }
+}
 
 void bridge_releasedir(fuse_req_t req, fuse_ino_t ino,
                        struct fuse_file_info *fi);
@@ -137,4 +153,42 @@ int MountAndRun(void *userdata, int argc, char *argv[]) {
   fuse_opt_free_args(&args);
 
   return err ? 1 : 0;
+}
+
+int DirBufAdd(struct DirBuf *db, const char *name, fuse_ino_t ino, int mode,
+              off_t next) {
+  struct stat stbuf;
+  memset(&stbuf, 0, sizeof(stbuf));
+  stbuf.st_ino = ino;
+  stbuf.st_mode = mode;
+
+  while (1) {
+    size_t size =
+        fuse_add_direntry(db->req, db->cur, db->remaining, name, &stbuf, next);
+    if (size < db->remaining) {
+      db->cur += size;
+      db->remaining -= size;
+      return 0;
+    }
+
+    if (db->size >= db->maxSize) {
+      return 1;
+    }
+
+    // Increase buffer size and retry.
+    size_t newSize = 2 * db->size;
+    if (newSize < db->size + size) {
+      newSize = db->size + size;
+    }
+    if (newSize > db->maxSize) {
+      newSize = db->maxSize;
+    }
+
+    char *newBuf = realloc(db->buf, newSize);
+    if (!newBuf) {
+      return 1;
+    }
+    db->buf = newBuf;
+    db->size = newSize;
+  }
 }
