@@ -1,4 +1,5 @@
 go-fuse-c
 =========
 
-Go wrapper for FUSE C low-level API.
+CGO wrapper for FUSE C low-level API.
+
