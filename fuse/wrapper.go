@@ -8,14 +8,14 @@ import (
 // #include "wrapper.h"
 import "C"
 
-func FuseVersion() int {
+func Version() int {
 	return int(C.fuse_version())
 }
 
 //export LL_Init
 func LL_Init(t unsafe.Pointer, cinfo *C.struct_fuse_conn_info) {
 	ops := (*Operations)(t)
-	info := &FuseConnInfo{}
+	info := &ConnInfo{}
 	(*ops).Init(info)
 }
 
@@ -26,22 +26,58 @@ func LL_Destroy(t unsafe.Pointer) {
 }
 
 //export LL_Lookup
-func LL_Lookup(t unsafe.Pointer, dir C.fuse_ino_t, name *C.char, cerr *C.int,
-	cent *C.struct_fuse_entry_param) {
+func LL_Lookup(t unsafe.Pointer, dir C.fuse_ino_t, name *C.char,
+	cent *C.struct_fuse_entry_param) C.int {
 
 	ops := (*Operations)(t)
-	if err, ent := (*ops).Lookup(int64(dir), C.GoString(name)); err != 0 {
-		*cerr = C.int(err)
-	} else {
+	err, ent := (*ops).Lookup(int64(dir), C.GoString(name))
+	if err == OK {
 		ent.ToC(cent)
+	}
+	return C.int(err)
+}
+
+//export LL_GetAttr
+func LL_GetAttr(t unsafe.Pointer, ino C.fuse_ino_t, fi *C.struct_fuse_file_info,
+	cattr *C.struct_stat, ctimeout *C.double) C.int {
+
+	ops := (*Operations)(t)
+	err, attr := (*ops).GetAttr(int64(ino), NewFileInfo(fi))
+	if err == OK {
+		ToCStat(attr.Attr, cattr)
+		(*ctimeout) = C.double(attr.AttrTimeout)
+	}
+	return C.int(err)
+}
+
+type FileInfo struct {
+	Flags     int
+	Writepage bool
+	// Bitfields not supported by CGO.
+	// TODO: create separate wrapper?
+	//DirectIo     bool
+	//KeepCache    bool
+	//Flush        bool
+	//NonSeekable  bool
+	//FlockRelease bool
+	Handle    uint64
+	LockOwner uint64
+}
+
+func NewFileInfo(fi *C.struct_fuse_file_info) *FileInfo {
+	return &FileInfo{
+		Flags:     int(fi.flags),
+		Writepage: fi.writepage != 0,
+		Handle:    uint64(fi.fh),
+		LockOwner: uint64(fi.lock_owner),
 	}
 }
 
-type FuseConnInfo struct {
+type ConnInfo struct {
 	// TODO
 }
 
-type FuseEntryParam struct {
+type EntryParam struct {
 	/** Unique inode number
 	 *
 	 * In lookup, zero means negative entry (from version 2.5)
@@ -82,6 +118,20 @@ type FuseEntryParam struct {
 	EntryTimeout float64
 }
 
+type Attr struct {
+	/** Inode attributes.
+	 *
+	 * Even if attr_timeout == 0, attr must be correct. For example,
+	 * for open(), FUSE uses attr.st_size from lookup() to determine
+	 * how many bytes to request. If this value is not correct,
+	 * incorrect data will be returned.
+	 */
+	Attr *syscall.Stat_t
+
+	/** Validity timeout (in seconds) for the attributes */
+	AttrTimeout float64
+}
+
 func ToCStat(s *syscall.Stat_t, o *C.struct_stat) {
 	o.st_ino = C.__ino_t(s.Ino)
 	o.st_mode = C.__mode_t(s.Mode)
@@ -89,7 +139,7 @@ func ToCStat(s *syscall.Stat_t, o *C.struct_stat) {
 	o.st_size = C.__off_t(s.Size)
 }
 
-func (e *FuseEntryParam) ToC(o *C.struct_fuse_entry_param) {
+func (e *EntryParam) ToC(o *C.struct_fuse_entry_param) {
 	o.ino = C.fuse_ino_t(e.Ino)
 	o.generation = C.ulong(e.Generation)
 	ToCStat(e.Attr, &o.attr)
@@ -100,7 +150,8 @@ func (e *FuseEntryParam) ToC(o *C.struct_fuse_entry_param) {
 // Operations for Fuse's LowLevel API.
 // TODO: allow implementing partial option set.
 type Operations interface {
-	Init(*FuseConnInfo)
+	Init(*ConnInfo)
 	Destroy()
-	Lookup(dir int64, name string) (errCode Status, entry *FuseEntryParam)
+	Lookup(dir int64, name string) (err Status, entry *EntryParam)
+	GetAttr(ino int64, fi *FileInfo) (err Status, attr *Attr)
 }

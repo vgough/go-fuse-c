@@ -12,9 +12,8 @@ void bridge_destroy(void *userdata) { LL_Destroy(userdata); }
 
 void bridge_lookup(fuse_req_t req, fuse_ino_t parent, const char *name) {
   void *userdata = fuse_req_userdata(req);
-  int err = 0;
   struct fuse_entry_param param;
-  LL_Lookup(userdata, parent, (char *)name, &err, &param);
+  int err = LL_Lookup(userdata, parent, (char *)name, &param);
   if (err != 0) {
     fuse_reply_err(req, err);
   } else {
@@ -25,6 +24,15 @@ void bridge_lookup(fuse_req_t req, fuse_ino_t parent, const char *name) {
 void bridge_forget(fuse_req_t req, fuse_ino_t ino, unsigned long nlookup);
 
 void bridge_getattr(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi) {
+  void *userdata = fuse_req_userdata(req);
+  struct stat attr;
+  double attr_timeout = 1.0;
+  int err = LL_GetAttr(userdata, ino, fi, &attr, &attr_timeout);
+  if (err != 0) {
+    fuse_reply_err(req, err);
+  } else {
+    fuse_reply_attr(req, &attr, attr_timeout);
+  }
 }
 
 void bridge_setattr(fuse_req_t req, fuse_ino_t ino, struct stat *attr,
