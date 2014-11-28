@@ -92,6 +92,10 @@ type FileInfo struct {
 }
 
 func newFileInfo(fi *C.struct_fuse_file_info) *FileInfo {
+	if fi == nil {
+		return nil
+	}
+
 	return &FileInfo{
 		Flags:     int(fi.flags),
 		Writepage: fi.writepage != 0,
