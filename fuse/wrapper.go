@@ -57,7 +57,7 @@ func ll_ReadDir(t unsafe.Pointer, ino C.fuse_ino_t, size C.size_t, off C.off_t,
 	fi *C.struct_fuse_file_info, db *C.struct_DirBuf) C.int {
 	ops := (*Operations)(t)
 	writer := &dirBuf{db}
-	err := (*ops).ReadDir(int64(ino), int64(off), int(size), writer)
+	err := (*ops).ReadDir(int64(ino), newFileInfo(fi), int64(off), int(size), writer)
 	return C.int(err)
 }
 
@@ -185,5 +185,5 @@ type Operations interface {
 	Destroy()
 	Lookup(dir int64, name string) (err Status, entry *EntryParam)
 	GetAttr(ino int64, fi *FileInfo) (err Status, attr *Attr)
-	ReadDir(ino int64, off int64, size int, w DirEntryWriter) Status
+	ReadDir(ino int64, fi *FileInfo, off int64, size int, w DirEntryWriter) Status
 }
