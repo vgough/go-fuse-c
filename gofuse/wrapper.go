@@ -102,5 +102,5 @@ func (e *FuseEntryParam) ToC(o *C.struct_fuse_entry_param) {
 type Operations interface {
 	Init(*FuseConnInfo)
 	Destroy()
-	Lookup(dir int64, name string) (errCode int, entry *FuseEntryParam)
+	Lookup(dir int64, name string) (errCode Status, entry *FuseEntryParam)
 }
