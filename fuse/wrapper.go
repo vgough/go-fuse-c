@@ -12,39 +12,39 @@ func Version() int {
 	return int(C.fuse_version())
 }
 
-//export LL_Init
-func LL_Init(t unsafe.Pointer, cinfo *C.struct_fuse_conn_info) {
+//export ll_Init
+func ll_Init(t unsafe.Pointer, cinfo *C.struct_fuse_conn_info) {
 	ops := (*Operations)(t)
 	info := &ConnInfo{}
 	(*ops).Init(info)
 }
 
-//export LL_Destroy
-func LL_Destroy(t unsafe.Pointer) {
+//export ll_Destroy
+func ll_Destroy(t unsafe.Pointer) {
 	ops := (*Operations)(t)
 	(*ops).Destroy()
 }
 
-//export LL_Lookup
-func LL_Lookup(t unsafe.Pointer, dir C.fuse_ino_t, name *C.char,
+//export ll_Lookup
+func ll_Lookup(t unsafe.Pointer, dir C.fuse_ino_t, name *C.char,
 	cent *C.struct_fuse_entry_param) C.int {
 
 	ops := (*Operations)(t)
 	err, ent := (*ops).Lookup(int64(dir), C.GoString(name))
 	if err == OK {
-		ent.ToC(cent)
+		ent.toC(cent)
 	}
 	return C.int(err)
 }
 
-//export LL_GetAttr
-func LL_GetAttr(t unsafe.Pointer, ino C.fuse_ino_t, fi *C.struct_fuse_file_info,
+//export ll_GetAttr
+func ll_GetAttr(t unsafe.Pointer, ino C.fuse_ino_t, fi *C.struct_fuse_file_info,
 	cattr *C.struct_stat, ctimeout *C.double) C.int {
 
 	ops := (*Operations)(t)
-	err, attr := (*ops).GetAttr(int64(ino), NewFileInfo(fi))
+	err, attr := (*ops).GetAttr(int64(ino), newFileInfo(fi))
 	if err == OK {
-		ToCStat(attr.Attr, cattr)
+		toCStat(attr.Attr, cattr)
 		(*ctimeout) = C.double(attr.AttrTimeout)
 	}
 	return C.int(err)
@@ -52,8 +52,8 @@ func LL_GetAttr(t unsafe.Pointer, ino C.fuse_ino_t, fi *C.struct_fuse_file_info,
 
 const dirBufGrowSize = 8 * 1024
 
-//export LL_ReadDir
-func LL_ReadDir(t unsafe.Pointer, ino C.fuse_ino_t, size C.size_t, off C.off_t,
+//export ll_ReadDir
+func ll_ReadDir(t unsafe.Pointer, ino C.fuse_ino_t, size C.size_t, off C.off_t,
 	fi *C.struct_fuse_file_info, db *C.struct_DirBuf) C.int {
 	ops := (*Operations)(t)
 	writer := &dirBuf{db}
@@ -91,7 +91,7 @@ type FileInfo struct {
 	LockOwner uint64
 }
 
-func NewFileInfo(fi *C.struct_fuse_file_info) *FileInfo {
+func newFileInfo(fi *C.struct_fuse_file_info) *FileInfo {
 	return &FileInfo{
 		Flags:     int(fi.flags),
 		Writepage: fi.writepage != 0,
@@ -159,17 +159,17 @@ type Attr struct {
 	AttrTimeout float64
 }
 
-func ToCStat(s *syscall.Stat_t, o *C.struct_stat) {
+func toCStat(s *syscall.Stat_t, o *C.struct_stat) {
 	o.st_ino = C.__ino_t(s.Ino)
 	o.st_mode = C.__mode_t(s.Mode)
 	o.st_nlink = C.__nlink_t(s.Nlink)
 	o.st_size = C.__off_t(s.Size)
 }
 
-func (e *EntryParam) ToC(o *C.struct_fuse_entry_param) {
+func (e *EntryParam) toC(o *C.struct_fuse_entry_param) {
 	o.ino = C.fuse_ino_t(e.Ino)
 	o.generation = C.ulong(e.Generation)
-	ToCStat(e.Attr, &o.attr)
+	toCStat(e.Attr, &o.attr)
 	o.attr_timeout = C.double(e.AttrTimeout)
 	o.entry_timeout = C.double(e.EntryTimeout)
 }

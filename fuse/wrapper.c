@@ -6,15 +6,15 @@
 #include <string.h>
 
 void bridge_init(void *userdata, struct fuse_conn_info *conn) {
-  LL_Init(userdata, conn);
+  ll_Init(userdata, conn);
 }
 
-void bridge_destroy(void *userdata) { LL_Destroy(userdata); }
+void bridge_destroy(void *userdata) { ll_Destroy(userdata); }
 
 void bridge_lookup(fuse_req_t req, fuse_ino_t parent, const char *name) {
   void *userdata = fuse_req_userdata(req);
   struct fuse_entry_param param;
-  int err = LL_Lookup(userdata, parent, (char *)name, &param);
+  int err = ll_Lookup(userdata, parent, (char *)name, &param);
   if (err != 0) {
     fuse_reply_err(req, err);
   } else {
@@ -28,7 +28,7 @@ void bridge_getattr(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi) {
   void *userdata = fuse_req_userdata(req);
   struct stat attr;
   double attr_timeout = 1.0;
-  int err = LL_GetAttr(userdata, ino, fi, &attr, &attr_timeout);
+  int err = ll_GetAttr(userdata, ino, fi, &attr, &attr_timeout);
   if (err != 0) {
     fuse_reply_err(req, err);
   } else {
@@ -75,7 +75,7 @@ void bridge_readdir(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
   db.cur = db.buf;
   db.remaining = db.size;
 
-  int err = LL_ReadDir(userdata, ino, size, off, fi, &db);
+  int err = ll_ReadDir(userdata, ino, size, off, fi, &db);
   if (err != 0) {
     fuse_reply_err(req, err);
   } else {
