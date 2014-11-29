@@ -30,7 +30,7 @@ func ll_Lookup(id C.int, dir C.fuse_ino_t, name *C.char,
 	cent *C.struct_fuse_entry_param) C.int {
 
 	ops := rawFsMap[int(id)]
-	err, ent := ops.Lookup(int64(dir), C.GoString(name))
+	ent, err := ops.Lookup(int64(dir), C.GoString(name))
 	if err == OK {
 		ent.toCEntry(cent)
 	}
@@ -42,15 +42,13 @@ func ll_GetAttr(id C.int, ino C.fuse_ino_t, fi *C.struct_fuse_file_info,
 	cattr *C.struct_stat, ctimeout *C.double) C.int {
 
 	ops := rawFsMap[int(id)]
-	err, attr := ops.GetAttr(int64(ino), newFileInfo(fi))
+	attr, err := ops.GetAttr(int64(ino), newFileInfo(fi))
 	if err == OK {
 		attr.toCStat(cattr)
 		(*ctimeout) = C.double(attr.Timeout)
 	}
 	return C.int(err)
 }
-
-const dirBufGrowSize = 8 * 1024
 
 //export ll_ReadDir
 func ll_ReadDir(id C.int, ino C.fuse_ino_t, size C.size_t, off C.off_t,
@@ -69,6 +67,19 @@ func ll_Open(id C.int, ino C.fuse_ino_t, fi *C.struct_fuse_file_info) C.int {
 	err := ops.Open(int64(ino), info)
 	if err == OK {
 		fi.fh = C.uint64_t(info.Handle)
+	}
+	return C.int(err)
+}
+
+//export ll_Read
+func ll_Read(id C.int, ino C.fuse_ino_t, off C.off_t,
+	fi *C.struct_fuse_file_info, buf unsafe.Pointer, size *C.int) C.int {
+
+	ops := rawFsMap[int(id)]
+	out := C.GoBytes(buf, *size)
+	n, err := ops.Read(out, int64(ino), int64(off), newFileInfo(fi))
+	if err == OK {
+		*size = C.int(n)
 	}
 	return C.int(err)
 }

@@ -9,10 +9,26 @@ import (
 type RawFileSystem interface {
 	Init(*ConnInfo)
 	Destroy()
-	Lookup(dir int64, name string) (err Status, entry *EntryParam)
-	GetAttr(ino int64, fi *FileInfo) (err Status, attr *InoAttr)
+  // StatFs
+
+	Lookup(dir int64, name string) (entry *EntryParam, err Status)
+  // Forget
+
+	GetAttr(ino int64, fi *FileInfo) (attr *InoAttr, err Status)
+  // SetAttr
+
+  // Directory handling
 	ReadDir(ino int64, fi *FileInfo, off int64, size int, w DirEntryWriter) Status
+  // OpenDir
+  // ReleaseDir
+  // FsyncDir
+
+  // File handling
 	Open(ino int64, fi *FileInfo) Status
+  Read(p []byte, ino int64, off int64, fi *FileInfo) (n int, err Status)
+  // Create
+
+  // TODO: extended attribute handling
 }
 
 type DirEntryWriter interface {

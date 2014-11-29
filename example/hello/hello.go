@@ -48,23 +48,23 @@ func (h *HelloFs) stat(ino int64) *fuse.InoAttr {
 }
 
 func (h *HelloFs) GetAttr(ino int64, info *fuse.FileInfo) (
-	err fuse.Status, attr *fuse.InoAttr) {
+	attr *fuse.InoAttr, err fuse.Status) {
 
 	fmt.Println("GetAttr", ino)
 	s := h.stat(ino)
 	if s == nil {
-		return fuse.ENOENT, nil
+		return nil, fuse.ENOENT
 	} else {
-		return fuse.OK, s
+		return s, fuse.OK
 	}
 }
 
 func (h *HelloFs) Lookup(parent int64, name string) (
-	err fuse.Status, entry *fuse.EntryParam) {
+	entry *fuse.EntryParam, err fuse.Status) {
 
 	fmt.Println("Lookup", parent, name)
 	if parent != 1 || name != "hello" {
-		return fuse.ENOENT, nil
+		return nil, fuse.ENOENT
 	}
 
 	e := &fuse.EntryParam{
@@ -74,7 +74,7 @@ func (h *HelloFs) Lookup(parent int64, name string) (
 		EntryTimeout: 1.0,
 	}
 
-	return fuse.OK, e
+	return e, fuse.OK
 }
 
 func (h *HelloFs) ReadDir(ino int64, fi *fuse.FileInfo, off int64, size int,
@@ -106,6 +106,23 @@ func (h *HelloFs) Open(ino int64, fi *fuse.FileInfo) fuse.Status {
 	} else {
 		return fuse.OK
 	}
+}
+
+func (h *HelloFs) Read(p []byte, ino int64, off int64,
+	fi *fuse.FileInfo) (int, fuse.Status) {
+
+	fmt.Println("Read", ino, off)
+	if ino != 2 {
+		return 0, fuse.ENOENT
+	}
+
+	data := []byte(helloStr)
+	n := len(data) - int(off)
+	if n < 0 {
+		n = 0
+	}
+	copy(p, data[off:])
+	return n, fuse.OK
 }
 
 func main() {

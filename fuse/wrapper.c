@@ -2,6 +2,7 @@
 
 #include "_cgo_export.h"
 
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
@@ -26,8 +27,8 @@ void bridge_lookup(fuse_req_t req, fuse_ino_t parent, const char *name) {
   int err = ll_Lookup(id, parent, (char *)name, &param);
   if (err != 0) {
     fuse_reply_err(req, err);
-  } else {
-    fuse_reply_entry(req, &param);
+  } else if (fuse_reply_entry(req, &param) == -ENOENT) {
+    // TODO: request aborted, call Forget.
   }
 }
 
@@ -68,13 +69,27 @@ void bridge_open(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi) {
   int err = ll_Open(id, ino, fi);
   if (err != 0) {
     fuse_reply_err(req, err);
-  } else {
-    fuse_reply_open(req, fi);
+  } else if (fuse_reply_open(req, fi) == -ENOENT) {
+    // TODO: Request aborted, let Go wrapper know.
   }
 }
 
 void bridge_read(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
-                 struct fuse_file_info *fi) {}
+                 struct fuse_file_info *fi) {
+  int id = *(int *)fuse_req_userdata(req);
+  char *buf = malloc(size);
+  if (!buf) {
+    fuse_reply_err(req, EINTR);
+  }
+  int n = size;
+  int err = ll_Read(id, ino, off, fi, buf, &n);
+  if (err != 0) {
+    fuse_reply_err(req, err);
+  }
+
+  fuse_reply_buf(req, buf, n);
+  free(buf);
+}
 
 void bridge_write(fuse_req_t req, fuse_ino_t ino, const char *buf, size_t size,
                   off_t off, struct fuse_file_info *fi);
