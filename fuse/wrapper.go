@@ -14,14 +14,14 @@ func Version() int {
 
 //export ll_Init
 func ll_Init(id C.int, cinfo *C.struct_fuse_conn_info) {
-	ops := opMap[int(id)]
+	ops := rawFsMap[int(id)]
 	info := &ConnInfo{}
 	ops.Init(info)
 }
 
 //export ll_Destroy
 func ll_Destroy(id C.int) {
-	ops := opMap[int(id)]
+	ops := rawFsMap[int(id)]
 	ops.Destroy()
 }
 
@@ -29,7 +29,7 @@ func ll_Destroy(id C.int) {
 func ll_Lookup(id C.int, dir C.fuse_ino_t, name *C.char,
 	cent *C.struct_fuse_entry_param) C.int {
 
-	ops := opMap[int(id)]
+	ops := rawFsMap[int(id)]
 	err, ent := ops.Lookup(int64(dir), C.GoString(name))
 	if err == OK {
 		ent.toCEntry(cent)
@@ -41,7 +41,7 @@ func ll_Lookup(id C.int, dir C.fuse_ino_t, name *C.char,
 func ll_GetAttr(id C.int, ino C.fuse_ino_t, fi *C.struct_fuse_file_info,
 	cattr *C.struct_stat, ctimeout *C.double) C.int {
 
-	ops := opMap[int(id)]
+	ops := rawFsMap[int(id)]
 	err, attr := ops.GetAttr(int64(ino), newFileInfo(fi))
 	if err == OK {
 		attr.toCStat(cattr)
@@ -56,7 +56,7 @@ const dirBufGrowSize = 8 * 1024
 func ll_ReadDir(id C.int, ino C.fuse_ino_t, size C.size_t, off C.off_t,
 	fi *C.struct_fuse_file_info, db *C.struct_DirBuf) C.int {
 
-	ops := opMap[int(id)]
+	ops := rawFsMap[int(id)]
 	writer := &dirBuf{db}
 	err := ops.ReadDir(int64(ino), newFileInfo(fi), int64(off), int(size), writer)
 	return C.int(err)
@@ -64,17 +64,13 @@ func ll_ReadDir(id C.int, ino C.fuse_ino_t, size C.size_t, off C.off_t,
 
 //export ll_Open
 func ll_Open(id C.int, ino C.fuse_ino_t, fi *C.struct_fuse_file_info) C.int {
-	ops := opMap[int(id)]
+	ops := rawFsMap[int(id)]
 	info := newFileInfo(fi)
 	err := ops.Open(int64(ino), info)
 	if err == OK {
 		fi.fh = C.uint64_t(info.Handle)
 	}
 	return C.int(err)
-}
-
-type DirEntryWriter interface {
-	Add(name string, ino int64, mode int, next int64) bool
 }
 
 type dirBuf struct {
@@ -89,24 +85,6 @@ func (d *dirBuf) Add(name string, ino int64, mode int, next int64) bool {
 	return res == 0
 }
 
-type FileInfo struct {
-	Flags     int
-	Writepage bool
-	// Bitfields not supported by CGO.
-	// TODO: create separate wrapper?
-	//DirectIo     bool
-	//KeepCache    bool
-	//Flush        bool
-	//NonSeekable  bool
-	//FlockRelease bool
-	Handle    uint64
-	LockOwner uint64
-}
-
-func (f *FileInfo) AccessMode() AccessMode {
-	return AccessMode(f.Flags & 3)
-}
-
 func newFileInfo(fi *C.struct_fuse_file_info) *FileInfo {
 	if fi == nil {
 		return nil
@@ -118,68 +96,6 @@ func newFileInfo(fi *C.struct_fuse_file_info) *FileInfo {
 		Handle:    uint64(fi.fh),
 		LockOwner: uint64(fi.lock_owner),
 	}
-}
-
-type ConnInfo struct {
-	// TODO
-}
-
-type EntryParam struct {
-	/** Unique inode number
-	 *
-	 * In lookup, zero means negative entry (from version 2.5)
-	 * Returning ENOENT also means negative entry, but by setting zero
-	 * ino the kernel may cache negative entries for entry_timeout
-	 * seconds.
-	 */
-	Ino int64
-
-	/** Generation number for this entry.
-	 *
-	 * If the file system will be exported over NFS, the
-	 * ino/generation pairs need to be unique over the file
-	 * system's lifetime (rather than just the mount time). So if
-	 * the file system reuses an inode after it has been deleted,
-	 * it must assign a new, previously unused generation number
-	 * to the inode at the same time.
-	 *
-	 * The generation must be non-zero, otherwise FUSE will treat
-	 * it as an error.
-	 *
-	 */
-	Generation int64
-
-	/**
-	 * Inode attributes.
-	 */
-	Attr *InoAttr
-
-	/** Validity timeout (in seconds) for the attributes */
-	AttrTimeout float64
-
-	/** Validity timeout (in seconds) for the name */
-	EntryTimeout float64
-}
-
-/** Inode attributes.
- *
- * Even if Timeout == 0, attr must be correct. For example,
- * for open(), FUSE uses attr.Size from lookup() to determine
- * how many bytes to request. If this value is not correct,
- * incorrect data will be returned.
- */
-type InoAttr struct {
-	Ino   int64
-	Size  int64
-	Mode  int
-	Nlink int
-
-	Atim time.Time
-	Ctim time.Time
-	Mtim time.Time
-
-	/** Validity timeout (in seconds) for the attributes */
-	Timeout float64
 }
 
 func (a *InoAttr) toCStat(o *C.struct_stat) {
@@ -203,15 +119,4 @@ func (e *EntryParam) toCEntry(o *C.struct_fuse_entry_param) {
 	e.Attr.toCStat(&o.attr)
 	o.attr_timeout = C.double(e.AttrTimeout)
 	o.entry_timeout = C.double(e.EntryTimeout)
-}
-
-// Operations for Fuse's LowLevel API.
-// TODO: allow implementing partial option set.
-type Operations interface {
-	Init(*ConnInfo)
-	Destroy()
-	Lookup(dir int64, name string) (err Status, entry *EntryParam)
-	GetAttr(ino int64, fi *FileInfo) (err Status, attr *InoAttr)
-	ReadDir(ino int64, fi *FileInfo, off int64, size int, w DirEntryWriter) Status
-	Open(ino int64, fi *FileInfo) Status
 }

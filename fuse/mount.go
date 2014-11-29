@@ -11,18 +11,18 @@ import (
 	"unsafe"
 )
 
-// Tracks instances of Operations, with a unique identifier used by C code.
+// Tracks instances of RawFileSystem, with a unique identifier used by C code.
 // This avoids passing Go pointers into C code.
-var opMap map[int]Operations = make(map[int]Operations)
+var rawFsMap map[int]RawFileSystem = make(map[int]RawFileSystem)
 var nextOpId int = 1
 
 // TODO: check which operations are provided and tell the C code, so that it only
 // sets up bridge methods for implemented operations.
-func MountAndRun(args []string, ops Operations) int {
+func MountAndRun(args []string, ops RawFileSystem) int {
 	id := nextOpId
 	nextOpId++
-	opMap[id] = ops
-	defer delete(opMap, id)
+	rawFsMap[id] = ops
+	defer delete(rawFsMap, id)
 
 	argv := make([]*C.char, len(args)+1)
 	for i, s := range args {
