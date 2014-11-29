@@ -1,6 +1,7 @@
 package fuse
 
 import (
+	"reflect"
 	"time"
 	"unsafe"
 )
@@ -76,7 +77,14 @@ func ll_Read(id C.int, ino C.fuse_ino_t, off C.off_t,
 	fi *C.struct_fuse_file_info, buf unsafe.Pointer, size *C.int) C.int {
 
 	ops := rawFsMap[int(id)]
-	out := C.GoBytes(buf, *size)
+
+	// Create slice backed by C buffer.
+	hdr := reflect.SliceHeader{
+		Data: uintptr(buf),
+		Len:  int(*size),
+		Cap:  int(*size),
+	}
+	out := *(*[]byte)(unsafe.Pointer(&hdr))
 	n, err := ops.Read(out, int64(ino), int64(off), newFileInfo(fi))
 	if err == OK {
 		*size = C.int(n)
