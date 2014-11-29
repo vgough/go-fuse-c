@@ -14,10 +14,7 @@ struct DirBuf {
   char *buf;
   size_t size;
 
-  char *cur;
-  size_t remaining;
-
-  size_t maxSize;
+  size_t offset;
 };
 
 // Returns 0 on success.

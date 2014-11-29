@@ -5,9 +5,12 @@ import (
 	"github.com/vgough/go-fuse-c/fuse"
 	"os"
 	"syscall"
+	"time"
 )
 
 const helloStr = "Hello World!\n"
+
+var mountTime = syscall.NsecToTimespec(time.Now().UnixNano())
 
 type HelloFs struct {
 }
@@ -36,6 +39,10 @@ func (h *HelloFs) stat(ino int64) *syscall.Stat_t {
 	default:
 		return nil
 	}
+
+	stat.Atim = mountTime
+	stat.Ctim = mountTime
+	stat.Mtim = mountTime
 
 	return stat
 }

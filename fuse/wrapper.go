@@ -163,11 +163,20 @@ type Attr struct {
 	AttrTimeout float64
 }
 
+func toCTime(o *C.struct_timespec, i syscall.Timespec) {
+	s, n := i.Unix()
+	o.tv_sec = C.__time_t(s)
+	o.tv_nsec = C.__syscall_slong_t(n)
+}
+
 func toCStat(s *syscall.Stat_t, o *C.struct_stat) {
 	o.st_ino = C.__ino_t(s.Ino)
 	o.st_mode = C.__mode_t(s.Mode)
 	o.st_nlink = C.__nlink_t(s.Nlink)
 	o.st_size = C.__off_t(s.Size)
+	toCTime(&o.st_atim, s.Atim)
+	toCTime(&o.st_ctim, s.Ctim)
+	toCTime(&o.st_mtim, s.Mtim)
 }
 
 func (e *EntryParam) toC(o *C.struct_fuse_entry_param) {

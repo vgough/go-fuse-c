@@ -70,16 +70,15 @@ void bridge_readdir(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
   void *userdata = fuse_req_userdata(req);
   struct DirBuf db;
   db.req = req;
-  db.size = 4096;
+  db.size = size < 4096 ? 4096 : size;
   db.buf = malloc(db.size);
-  db.cur = db.buf;
-  db.remaining = db.size;
+  db.offset = 0;
 
   int err = ll_ReadDir(userdata, ino, size, off, fi, &db);
   if (err != 0) {
     fuse_reply_err(req, err);
   } else {
-    fuse_reply_buf(req, db.buf, db.size - db.remaining);
+    fuse_reply_buf(req, db.buf, db.offset);
   }
 }
 
@@ -162,33 +161,13 @@ int DirBufAdd(struct DirBuf *db, const char *name, fuse_ino_t ino, int mode,
   stbuf.st_ino = ino;
   stbuf.st_mode = mode;
 
-  while (1) {
-    size_t size =
-        fuse_add_direntry(db->req, db->cur, db->remaining, name, &stbuf, next);
-    if (size < db->remaining) {
-      db->cur += size;
-      db->remaining -= size;
-      return 0;
-    }
-
-    if (db->size >= db->maxSize) {
-      return 1;
-    }
-
-    // Increase buffer size and retry.
-    size_t newSize = 2 * db->size;
-    if (newSize < db->size + size) {
-      newSize = db->size + size;
-    }
-    if (newSize > db->maxSize) {
-      newSize = db->maxSize;
-    }
-
-    char *newBuf = realloc(db->buf, newSize);
-    if (!newBuf) {
-      return 1;
-    }
-    db->buf = newBuf;
-    db->size = newSize;
+  char *buf = db->buf + db->offset;
+  size_t left = db->size - db->offset;
+  size_t size = fuse_add_direntry(db->req, buf, left, name, &stbuf, next);
+  if (size < left) {
+    db->offset += size;
+    return 0;
   }
+
+  return 1;
 }
