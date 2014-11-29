@@ -4,6 +4,11 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+static const struct stat emptyStat;
+static const struct fuse_entry_param emptyEntryParam;
 
 void bridge_init(void *userdata, struct fuse_conn_info *conn) {
   ll_Init(userdata, conn);
@@ -13,7 +18,7 @@ void bridge_destroy(void *userdata) { ll_Destroy(userdata); }
 
 void bridge_lookup(fuse_req_t req, fuse_ino_t parent, const char *name) {
   void *userdata = fuse_req_userdata(req);
-  struct fuse_entry_param param;
+  struct fuse_entry_param param = emptyEntryParam;
   int err = ll_Lookup(userdata, parent, (char *)name, &param);
   if (err != 0) {
     fuse_reply_err(req, err);
@@ -26,7 +31,9 @@ void bridge_forget(fuse_req_t req, fuse_ino_t ino, unsigned long nlookup);
 
 void bridge_getattr(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi) {
   void *userdata = fuse_req_userdata(req);
-  struct stat attr;
+  struct stat attr = emptyStat;
+  attr.st_uid = getuid();
+  attr.st_gid = getgid();
   double attr_timeout = 1.0;
   int err = ll_GetAttr(userdata, ino, fi, &attr, &attr_timeout);
   if (err != 0) {
@@ -80,6 +87,8 @@ void bridge_readdir(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
   } else {
     fuse_reply_buf(req, db.buf, db.offset);
   }
+
+  free(db.buf);
 }
 
 void bridge_releasedir(fuse_req_t req, fuse_ino_t ino,
@@ -156,10 +165,11 @@ int MountAndRun(void *userdata, int argc, char *argv[]) {
 
 int DirBufAdd(struct DirBuf *db, const char *name, fuse_ino_t ino, int mode,
               off_t next) {
-  struct stat stbuf;
-  memset(&stbuf, 0, sizeof(stbuf));
+  struct stat stbuf = emptyStat;
   stbuf.st_ino = ino;
   stbuf.st_mode = mode;
+  stbuf.st_uid = getuid();
+  stbuf.st_gid = getgid();
 
   char *buf = db->buf + db->offset;
   size_t left = db->size - db->offset;
