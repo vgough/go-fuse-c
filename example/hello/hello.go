@@ -13,12 +13,15 @@ type HelloFs struct {
 }
 
 func (h *HelloFs) Init(*fuse.ConnInfo) {
+	fmt.Println("in Init")
 }
 
 func (h *HelloFs) Destroy() {
+	fmt.Println("in Destroy")
 }
 
 func (h *HelloFs) stat(ino int64) *syscall.Stat_t {
+	fmt.Println("stat", ino)
 	stat := &syscall.Stat_t{
 		Ino: uint64(ino),
 	}
@@ -39,12 +42,23 @@ func (h *HelloFs) stat(ino int64) *syscall.Stat_t {
 
 func (h *HelloFs) GetAttr(ino int64, info *fuse.FileInfo) (
 	err fuse.Status, attr *fuse.Attr) {
-	return fuse.ENOENT, nil
+
+	fmt.Println("GetAttr", ino)
+	s := h.stat(ino)
+	if s == nil {
+		return fuse.ENOENT, nil
+	} else {
+		return fuse.OK, &fuse.Attr{
+			Attr:        s,
+			AttrTimeout: 1.0,
+		}
+	}
 }
 
 func (h *HelloFs) Lookup(parent int64, name string) (
 	err fuse.Status, entry *fuse.EntryParam) {
 
+	fmt.Println("Lookup", parent, name)
 	if parent != 1 || name != "hello" {
 		return fuse.ENOENT, nil
 	}
@@ -62,6 +76,7 @@ func (h *HelloFs) Lookup(parent int64, name string) (
 func (h *HelloFs) ReadDir(ino int64, fi *fuse.FileInfo, off int64, size int,
 	w fuse.DirEntryWriter) fuse.Status {
 
+	fmt.Println("ReadDir", ino, off, size)
 	if ino != 1 {
 		return fuse.ENOTDIR
 	}
