@@ -1,7 +1,7 @@
 package fuse
 
 import (
-	"syscall"
+	"time"
 	"unsafe"
 )
 
@@ -32,7 +32,7 @@ func ll_Lookup(t unsafe.Pointer, dir C.fuse_ino_t, name *C.char,
 	ops := (*Operations)(t)
 	err, ent := (*ops).Lookup(int64(dir), C.GoString(name))
 	if err == OK {
-		ent.toC(cent)
+		ent.toCEntry(cent)
 	}
 	return C.int(err)
 }
@@ -44,8 +44,8 @@ func ll_GetAttr(t unsafe.Pointer, ino C.fuse_ino_t, fi *C.struct_fuse_file_info,
 	ops := (*Operations)(t)
 	err, attr := (*ops).GetAttr(int64(ino), newFileInfo(fi))
 	if err == OK {
-		toCStat(attr.Attr, cattr)
-		(*ctimeout) = C.double(attr.AttrTimeout)
+		attr.toCStat(cattr)
+		(*ctimeout) = C.double(attr.Timeout)
 	}
 	return C.int(err)
 }
@@ -133,14 +133,10 @@ type EntryParam struct {
 	 */
 	Generation int64
 
-	/** Inode attributes.
-	 *
-	 * Even if attr_timeout == 0, attr must be correct. For example,
-	 * for open(), FUSE uses attr.st_size from lookup() to determine
-	 * how many bytes to request. If this value is not correct,
-	 * incorrect data will be returned.
+	/**
+	 * Inode attributes.
 	 */
-	Attr *syscall.Stat_t
+	Attr *InoAttr
 
 	/** Validity timeout (in seconds) for the attributes */
 	AttrTimeout float64
@@ -149,40 +145,46 @@ type EntryParam struct {
 	EntryTimeout float64
 }
 
-type Attr struct {
-	/** Inode attributes.
-	 *
-	 * Even if attr_timeout == 0, attr must be correct. For example,
-	 * for open(), FUSE uses attr.st_size from lookup() to determine
-	 * how many bytes to request. If this value is not correct,
-	 * incorrect data will be returned.
-	 */
-	Attr *syscall.Stat_t
+/** Inode attributes.
+ *
+ * Even if Timeout == 0, attr must be correct. For example,
+ * for open(), FUSE uses attr.Size from lookup() to determine
+ * how many bytes to request. If this value is not correct,
+ * incorrect data will be returned.
+ */
+type InoAttr struct {
+	Ino   int64
+	Size  int64
+	Mode  int
+	Nlink int
+
+	Atim time.Time
+	Ctim time.Time
+	Mtim time.Time
 
 	/** Validity timeout (in seconds) for the attributes */
-	AttrTimeout float64
+	Timeout float64
 }
 
-func toCTime(o *C.struct_timespec, i syscall.Timespec) {
-	s, n := i.Unix()
-	o.tv_sec = C.__time_t(s)
-	o.tv_nsec = C.__syscall_slong_t(n)
+func (a *InoAttr) toCStat(o *C.struct_stat) {
+	o.st_ino = C.__ino_t(a.Ino)
+	o.st_mode = C.__mode_t(a.Mode)
+	o.st_nlink = C.__nlink_t(a.Nlink)
+	o.st_size = C.__off_t(a.Size)
+	toCTime(&o.st_ctim, a.Ctim)
+	toCTime(&o.st_mtim, a.Mtim)
+	toCTime(&o.st_atim, a.Atim)
 }
 
-func toCStat(s *syscall.Stat_t, o *C.struct_stat) {
-	o.st_ino = C.__ino_t(s.Ino)
-	o.st_mode = C.__mode_t(s.Mode)
-	o.st_nlink = C.__nlink_t(s.Nlink)
-	o.st_size = C.__off_t(s.Size)
-	toCTime(&o.st_atim, s.Atim)
-	toCTime(&o.st_ctim, s.Ctim)
-	toCTime(&o.st_mtim, s.Mtim)
+func toCTime(o *C.struct_timespec, i time.Time) {
+	o.tv_sec = C.__time_t(i.Unix())
+	o.tv_nsec = C.__syscall_slong_t(i.Nanosecond())
 }
 
-func (e *EntryParam) toC(o *C.struct_fuse_entry_param) {
+func (e *EntryParam) toCEntry(o *C.struct_fuse_entry_param) {
 	o.ino = C.fuse_ino_t(e.Ino)
 	o.generation = C.ulong(e.Generation)
-	toCStat(e.Attr, &o.attr)
+	e.Attr.toCStat(&o.attr)
 	o.attr_timeout = C.double(e.AttrTimeout)
 	o.entry_timeout = C.double(e.EntryTimeout)
 }
@@ -193,6 +195,6 @@ type Operations interface {
 	Init(*ConnInfo)
 	Destroy()
 	Lookup(dir int64, name string) (err Status, entry *EntryParam)
-	GetAttr(ino int64, fi *FileInfo) (err Status, attr *Attr)
+	GetAttr(ino int64, fi *FileInfo) (err Status, attr *InoAttr)
 	ReadDir(ino int64, fi *FileInfo, off int64, size int, w DirEntryWriter) Status
 }

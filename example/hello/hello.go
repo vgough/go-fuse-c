@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"github.com/vgough/go-fuse-c/fuse"
 	"os"
-	"syscall"
 	"time"
 )
 
 const helloStr = "Hello World!\n"
 
-var mountTime = syscall.NsecToTimespec(time.Now().UnixNano())
+var mountTime = time.Now()
 
 type HelloFs struct {
 }
@@ -23,10 +22,11 @@ func (h *HelloFs) Destroy() {
 	fmt.Println("in Destroy")
 }
 
-func (h *HelloFs) stat(ino int64) *syscall.Stat_t {
+func (h *HelloFs) stat(ino int64) *fuse.InoAttr {
 	fmt.Println("stat", ino)
-	stat := &syscall.Stat_t{
-		Ino: uint64(ino),
+	stat := &fuse.InoAttr{
+		Ino:     ino,
+		Timeout: 1.0,
 	}
 	switch ino {
 	case 1:
@@ -48,17 +48,14 @@ func (h *HelloFs) stat(ino int64) *syscall.Stat_t {
 }
 
 func (h *HelloFs) GetAttr(ino int64, info *fuse.FileInfo) (
-	err fuse.Status, attr *fuse.Attr) {
+	err fuse.Status, attr *fuse.InoAttr) {
 
 	fmt.Println("GetAttr", ino)
 	s := h.stat(ino)
 	if s == nil {
 		return fuse.ENOENT, nil
 	} else {
-		return fuse.OK, &fuse.Attr{
-			Attr:        s,
-			AttrTimeout: 1.0,
-		}
+		return fuse.OK, s
 	}
 }
 
