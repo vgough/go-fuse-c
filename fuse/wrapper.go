@@ -62,6 +62,17 @@ func ll_ReadDir(id C.int, ino C.fuse_ino_t, size C.size_t, off C.off_t,
 	return C.int(err)
 }
 
+//export ll_Open
+func ll_Open(id C.int, ino C.fuse_ino_t, fi *C.struct_fuse_file_info) C.int {
+	ops := opMap[int(id)]
+	info := newFileInfo(fi)
+	err := ops.Open(int64(ino), info)
+	if err == OK {
+		fi.fh = C.uint64_t(info.Handle)
+	}
+	return C.int(err)
+}
+
 type DirEntryWriter interface {
 	Add(name string, ino int64, mode int, next int64) bool
 }
@@ -90,6 +101,10 @@ type FileInfo struct {
 	//FlockRelease bool
 	Handle    uint64
 	LockOwner uint64
+}
+
+func (f *FileInfo) AccessMode() AccessMode {
+	return AccessMode(f.Flags & 3)
 }
 
 func newFileInfo(fi *C.struct_fuse_file_info) *FileInfo {
@@ -198,4 +213,5 @@ type Operations interface {
 	Lookup(dir int64, name string) (err Status, entry *EntryParam)
 	GetAttr(ino int64, fi *FileInfo) (err Status, attr *InoAttr)
 	ReadDir(ino int64, fi *FileInfo, off int64, size int, w DirEntryWriter) Status
+	Open(ino int64, fi *FileInfo) Status
 }

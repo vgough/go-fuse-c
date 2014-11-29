@@ -63,7 +63,15 @@ void bridge_rename(fuse_req_t req, fuse_ino_t parent, const char *name,
 void bridge_link(fuse_req_t req, fuse_ino_t ino, fuse_ino_t newparent,
                  const char *newname);
 
-void bridge_open(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi) {}
+void bridge_open(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi) {
+  int id = *(int *)fuse_req_userdata(req);
+  int err = ll_Open(id, ino, fi);
+  if (err != 0) {
+    fuse_reply_err(req, err);
+  } else {
+    fuse_reply_open(req, fi);
+  }
+}
 
 void bridge_read(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
                  struct fuse_file_info *fi) {}

@@ -23,4 +23,13 @@ const (
 	EBADF   = Status(syscall.EBADF)
 	ENODEV  = Status(syscall.ENODEV)
 	EROFS   = Status(syscall.EROFS)
+	EISDIR  = Status(syscall.EISDIR)
+)
+
+type AccessMode int32
+
+const (
+	O_RDONLY = AccessMode(0)
+	O_WRONLY = AccessMode(1)
+	O_RDWR   = AccessMode(2)
 )

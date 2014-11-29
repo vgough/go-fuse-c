@@ -97,6 +97,17 @@ func (h *HelloFs) ReadDir(ino int64, fi *fuse.FileInfo, off int64, size int,
 	return fuse.OK
 }
 
+func (h *HelloFs) Open(ino int64, fi *fuse.FileInfo) fuse.Status {
+	fmt.Println("Open", ino)
+	if ino != 2 {
+		return fuse.EISDIR
+	} else if fi.AccessMode() != fuse.O_RDONLY {
+		return fuse.EACCES
+	} else {
+		return fuse.OK
+	}
+}
+
 func main() {
 	args := os.Args
 	fmt.Println(args)
