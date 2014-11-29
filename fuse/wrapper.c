@@ -11,15 +11,19 @@ static const struct stat emptyStat;
 static const struct fuse_entry_param emptyEntryParam;
 
 void bridge_init(void *userdata, struct fuse_conn_info *conn) {
-  ll_Init(userdata, conn);
+  int id = *(int *)userdata;
+  ll_Init(id, conn);
 }
 
-void bridge_destroy(void *userdata) { ll_Destroy(userdata); }
+void bridge_destroy(void *userdata) {
+  int id = *(int *)userdata;
+  ll_Destroy(id);
+}
 
 void bridge_lookup(fuse_req_t req, fuse_ino_t parent, const char *name) {
-  void *userdata = fuse_req_userdata(req);
+  int id = *(int *)fuse_req_userdata(req);
   struct fuse_entry_param param = emptyEntryParam;
-  int err = ll_Lookup(userdata, parent, (char *)name, &param);
+  int err = ll_Lookup(id, parent, (char *)name, &param);
   if (err != 0) {
     fuse_reply_err(req, err);
   } else {
@@ -30,12 +34,12 @@ void bridge_lookup(fuse_req_t req, fuse_ino_t parent, const char *name) {
 void bridge_forget(fuse_req_t req, fuse_ino_t ino, unsigned long nlookup);
 
 void bridge_getattr(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi) {
-  void *userdata = fuse_req_userdata(req);
+  int id = *(int *)fuse_req_userdata(req);
   struct stat attr = emptyStat;
   attr.st_uid = getuid();
   attr.st_gid = getgid();
   double attr_timeout = 1.0;
-  int err = ll_GetAttr(userdata, ino, fi, &attr, &attr_timeout);
+  int err = ll_GetAttr(id, ino, fi, &attr, &attr_timeout);
   if (err != 0) {
     fuse_reply_err(req, err);
   } else {
@@ -74,14 +78,14 @@ void bridge_opendir(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi);
 
 void bridge_readdir(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
                     struct fuse_file_info *fi) {
-  void *userdata = fuse_req_userdata(req);
+  int id = *(int *)fuse_req_userdata(req);
   struct DirBuf db;
   db.req = req;
   db.size = size < 4096 ? 4096 : size;
   db.buf = malloc(db.size);
   db.offset = 0;
 
-  int err = ll_ReadDir(userdata, ino, size, off, fi, &db);
+  int err = ll_ReadDir(id, ino, size, off, fi, &db);
   if (err != 0) {
     fuse_reply_err(req, err);
   } else {
@@ -135,7 +139,7 @@ static struct fuse_lowlevel_ops bridge_ll_ops = {.init = bridge_init,
                                                  .open = bridge_open,
                                                  .read = bridge_read, };
 
-int MountAndRun(void *userdata, int argc, char *argv[]) {
+int MountAndRun(int id, int argc, char *argv[]) {
   struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
   struct fuse_chan *ch;
   char *mountpoint;
@@ -145,8 +149,7 @@ int MountAndRun(void *userdata, int argc, char *argv[]) {
       (ch = fuse_mount(mountpoint, &args)) != NULL) {
     struct fuse_session *se;
 
-    se = fuse_lowlevel_new(&args, &bridge_ll_ops, sizeof(bridge_ll_ops),
-                           userdata);
+    se = fuse_lowlevel_new(&args, &bridge_ll_ops, sizeof(bridge_ll_ops), &id);
     if (se != NULL) {
       if (fuse_set_signal_handlers(se) != -1) {
         fuse_session_add_chan(se, ch);

@@ -7,7 +7,7 @@
 #include <fuse/fuse_lowlevel.h>
 #include <stdlib.h>
 
-int MountAndRun(void *userdata, int argc, char *argv[]);
+int MountAndRun(int id, int argc, char *argv[]);
 
 struct DirBuf {
   fuse_req_t req;

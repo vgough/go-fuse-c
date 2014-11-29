@@ -13,24 +13,24 @@ func Version() int {
 }
 
 //export ll_Init
-func ll_Init(t unsafe.Pointer, cinfo *C.struct_fuse_conn_info) {
-	ops := (*Operations)(t)
+func ll_Init(id C.int, cinfo *C.struct_fuse_conn_info) {
+	ops := opMap[int(id)]
 	info := &ConnInfo{}
-	(*ops).Init(info)
+	ops.Init(info)
 }
 
 //export ll_Destroy
-func ll_Destroy(t unsafe.Pointer) {
-	ops := (*Operations)(t)
-	(*ops).Destroy()
+func ll_Destroy(id C.int) {
+	ops := opMap[int(id)]
+	ops.Destroy()
 }
 
 //export ll_Lookup
-func ll_Lookup(t unsafe.Pointer, dir C.fuse_ino_t, name *C.char,
+func ll_Lookup(id C.int, dir C.fuse_ino_t, name *C.char,
 	cent *C.struct_fuse_entry_param) C.int {
 
-	ops := (*Operations)(t)
-	err, ent := (*ops).Lookup(int64(dir), C.GoString(name))
+	ops := opMap[int(id)]
+	err, ent := ops.Lookup(int64(dir), C.GoString(name))
 	if err == OK {
 		ent.toCEntry(cent)
 	}
@@ -38,11 +38,11 @@ func ll_Lookup(t unsafe.Pointer, dir C.fuse_ino_t, name *C.char,
 }
 
 //export ll_GetAttr
-func ll_GetAttr(t unsafe.Pointer, ino C.fuse_ino_t, fi *C.struct_fuse_file_info,
+func ll_GetAttr(id C.int, ino C.fuse_ino_t, fi *C.struct_fuse_file_info,
 	cattr *C.struct_stat, ctimeout *C.double) C.int {
 
-	ops := (*Operations)(t)
-	err, attr := (*ops).GetAttr(int64(ino), newFileInfo(fi))
+	ops := opMap[int(id)]
+	err, attr := ops.GetAttr(int64(ino), newFileInfo(fi))
 	if err == OK {
 		attr.toCStat(cattr)
 		(*ctimeout) = C.double(attr.Timeout)
@@ -53,11 +53,12 @@ func ll_GetAttr(t unsafe.Pointer, ino C.fuse_ino_t, fi *C.struct_fuse_file_info,
 const dirBufGrowSize = 8 * 1024
 
 //export ll_ReadDir
-func ll_ReadDir(t unsafe.Pointer, ino C.fuse_ino_t, size C.size_t, off C.off_t,
+func ll_ReadDir(id C.int, ino C.fuse_ino_t, size C.size_t, off C.off_t,
 	fi *C.struct_fuse_file_info, db *C.struct_DirBuf) C.int {
-	ops := (*Operations)(t)
+
+	ops := opMap[int(id)]
 	writer := &dirBuf{db}
-	err := (*ops).ReadDir(int64(ino), newFileInfo(fi), int64(off), int(size), writer)
+	err := ops.ReadDir(int64(ino), newFileInfo(fi), int64(off), int(size), writer)
 	return C.int(err)
 }
 
