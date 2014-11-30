@@ -7,6 +7,7 @@ import (
 )
 
 // #include "wrapper.h"
+// #include <stdlib.h>  // for free()
 import "C"
 
 func Version() int {

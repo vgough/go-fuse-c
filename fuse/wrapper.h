@@ -4,8 +4,8 @@
 #define FUSE_USE_VERSION 29
 #define _FILE_OFFSET_BITS 64
 
-#include <fuse/fuse_lowlevel.h>
-#include <stdlib.h>
+#include <fuse/fuse_lowlevel.h>  // IWYU pragma: export
+#include <sys/types.h>           // for off_t
 
 int MountAndRun(int id, int argc, char *argv[]);
 
