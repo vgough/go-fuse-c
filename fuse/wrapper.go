@@ -31,8 +31,9 @@ func ll_StatFs(id C.int, ino C.fuse_ino_t, stat *C.struct_statvfs) C.int {
 	ops := rawFsMap[int(id)]
 	var s StatVfs
 	err := ops.StatFs(int64(ino), &s)
-
-	// TODO: translate s to stat
+	if err == OK {
+		s.toCStat(stat)
+	}
 	return C.int(err)
 }
 
@@ -131,6 +132,19 @@ func newFileInfo(fi *C.struct_fuse_file_info) *FileInfo {
 		Handle:    uint64(fi.fh),
 		LockOwner: uint64(fi.lock_owner),
 	}
+}
+
+func (s *StatVfs) toCStat(o *C.struct_statvfs) {
+	o.f_bsize = C.ulong(s.BlockSize)
+	o.f_blocks = C.__fsblkcnt64_t(s.Blocks)
+	o.f_bfree = C.__fsblkcnt64_t(s.BlocksFree)
+
+	o.f_files = C.__fsfilcnt64_t(s.Files)
+	o.f_ffree = C.__fsfilcnt64_t(s.FilesFree)
+
+	o.f_fsid = C.ulong(s.Fsid)
+	o.f_flag = C.ulong(s.Flags)
+	o.f_namemax = C.ulong(s.NameMax)
 }
 
 func (a *InoAttr) toCStat(o *C.struct_stat) {

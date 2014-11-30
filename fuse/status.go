@@ -33,3 +33,10 @@ const (
 	O_WRONLY = AccessMode(1)
 	O_RDWR   = AccessMode(2)
 )
+
+type FsFlags int32
+
+const (
+	ST_RDONLY = FsFlags(1) // Mount read-only
+	ST_NOSUID = FsFlags(2) // Ignore suid and sgid bits
+)

@@ -32,6 +32,16 @@ type RawFileSystem interface {
 }
 
 type StatVfs struct {
+	BlockSize  int64 // Filesystem block size
+	Blocks     int64 // Size of filesystem
+	BlocksFree int64 // Number of free blocks
+
+	Files     int64 // Number of files
+	FilesFree int64 // Number of free inodes
+
+	Fsid    int // Filesystem id
+	Flags   FsFlags
+	NameMax int // Maximum filename length
 }
 
 type DirEntryWriter interface {
