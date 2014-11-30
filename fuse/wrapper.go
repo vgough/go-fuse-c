@@ -26,6 +26,16 @@ func ll_Destroy(id C.int) {
 	ops.Destroy()
 }
 
+//export ll_StatFs
+func ll_StatFs(id C.int, ino C.fuse_ino_t, stat *C.struct_statvfs) C.int {
+	ops := rawFsMap[int(id)]
+	var s StatVfs
+	err := ops.StatFs(int64(ino), &s)
+
+	// TODO: translate s to stat
+	return C.int(err)
+}
+
 //export ll_Lookup
 func ll_Lookup(id C.int, dir C.fuse_ino_t, name *C.char,
 	cent *C.struct_fuse_entry_param) C.int {
@@ -36,6 +46,12 @@ func ll_Lookup(id C.int, dir C.fuse_ino_t, name *C.char,
 		ent.toCEntry(cent)
 	}
 	return C.int(err)
+}
+
+//export ll_Forget
+func ll_Forget(id C.int, ino C.fuse_ino_t, n C.int) {
+	ops := rawFsMap[int(id)]
+	ops.Forget(int64(ino), int(n))
 }
 
 //export ll_GetAttr

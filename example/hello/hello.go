@@ -12,14 +12,7 @@ const helloStr = "Hello World!\n"
 var mountTime = time.Now()
 
 type HelloFs struct {
-}
-
-func (h *HelloFs) Init(*fuse.ConnInfo) {
-	fmt.Println("in Init")
-}
-
-func (h *HelloFs) Destroy() {
-	fmt.Println("in Destroy")
+	fuse.DefaultRawFileSystem
 }
 
 func (h *HelloFs) stat(ino int64) *fuse.InoAttr {

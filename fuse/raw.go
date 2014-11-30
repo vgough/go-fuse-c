@@ -9,26 +9,29 @@ import (
 type RawFileSystem interface {
 	Init(*ConnInfo)
 	Destroy()
-  // StatFs
+	StatFs(ino int64, stat *StatVfs) Status
 
 	Lookup(dir int64, name string) (entry *EntryParam, err Status)
-  // Forget
+	Forget(ino int64, n int)
 
 	GetAttr(ino int64, fi *FileInfo) (attr *InoAttr, err Status)
-  // SetAttr
+	// SetAttr
 
-  // Directory handling
+	// Directory handling
 	ReadDir(ino int64, fi *FileInfo, off int64, size int, w DirEntryWriter) Status
-  // OpenDir
-  // ReleaseDir
-  // FsyncDir
+	// OpenDir
+	// ReleaseDir
+	// FsyncDir
 
-  // File handling
+	// File handling
 	Open(ino int64, fi *FileInfo) Status
-  Read(p []byte, ino int64, off int64, fi *FileInfo) (n int, err Status)
-  // Create
+	Read(p []byte, ino int64, off int64, fi *FileInfo) (n int, err Status)
+	// Create
 
-  // TODO: extended attribute handling
+	// TODO: extended attribute handling
+}
+
+type StatVfs struct {
 }
 
 type DirEntryWriter interface {

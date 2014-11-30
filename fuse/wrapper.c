@@ -10,6 +10,7 @@
 
 static const struct stat emptyStat;
 static const struct fuse_entry_param emptyEntryParam;
+static const struct statvfs emptyStatVfs;
 
 void bridge_init(void *userdata, struct fuse_conn_info *conn) {
   int id = *(int *)userdata;
@@ -28,11 +29,16 @@ void bridge_lookup(fuse_req_t req, fuse_ino_t parent, const char *name) {
   if (err != 0) {
     fuse_reply_err(req, err);
   } else if (fuse_reply_entry(req, &param) == -ENOENT) {
-    // TODO: request aborted, call Forget.
+    // Request aborted, tell filesystem that reference was dropped.
+    ll_Forget(id, param.ino, 1);
   }
 }
 
-void bridge_forget(fuse_req_t req, fuse_ino_t ino, unsigned long nlookup);
+void bridge_forget(fuse_req_t req, fuse_ino_t ino, unsigned long nlookup) {
+  int id = *(int *)fuse_req_userdata(req);
+  ll_Forget(id, ino, (int)nlookup);
+  fuse_reply_none(req);
+}
 
 void bridge_getattr(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi) {
   int id = *(int *)fuse_req_userdata(req);
@@ -122,7 +128,18 @@ void bridge_releasedir(fuse_req_t req, fuse_ino_t ino,
                        struct fuse_file_info *fi);
 void bridge_fsyncdir(fuse_req_t req, fuse_ino_t ino, int datasync,
                      struct fuse_file_info *fi);
-void bridge_statfs(fuse_req_t req, fuse_ino_t ino);
+
+void bridge_statfs(fuse_req_t req, fuse_ino_t ino) {
+  int id = *(int *)fuse_req_userdata(req);
+  struct statvfs stat = emptyStatVfs;
+  int err = ll_StatFs(id, ino, &stat);
+  if (err != 0) {
+    fuse_reply_err(req, err);
+  } else {
+    fuse_reply_statfs(req, &stat);
+  }
+}
+
 void bridge_setxattr(fuse_req_t req, fuse_ino_t ino, const char *name,
                      const char *value, size_t size, int flags);
 void bridge_getxattr(fuse_req_t req, fuse_ino_t ino, const char *name,
