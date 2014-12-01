@@ -33,3 +33,8 @@ func (d *DefaultRawFileSystem) Read(p []byte, ino int64, off int64, fi *FileInfo
 	n int, err Status) {
 	return 0, ENOSYS
 }
+
+func (d *DefaultRawFileSystem) MakeDir(dir int64, name string, mode int) (
+	entry *EntryParam, err Status) {
+	return nil, ENOSYS
+}

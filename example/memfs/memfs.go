@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"github.com/vgough/go-fuse-c/fuse"
 	"os"
 	"time"
@@ -42,20 +41,58 @@ func NewMemFs() *MemFs {
 		inodes: make(map[int64]*iNode),
 		nextId: 2,
 	}
+	now := time.Now()
 	m.inodes[1] = &iNode{
+		id:    1,
 		dir:   root,
-		ctime: time.Now(),
-		mtime: time.Now(),
-		mode:  0777 & fuse.S_IFDIR,
+		ctime: now,
+		mtime: now,
+		mode:  0777 | fuse.S_IFDIR,
 	}
 	return m
 }
 
+func (m *MemFs) MakeDir(dir int64, name string, mode int) (*fuse.EntryParam, fuse.Status) {
+	n := m.inodes[dir]
+	if n == nil {
+		return nil, fuse.ENOENT
+	}
+	d := n.dir
+	if d == nil {
+		return nil, fuse.ENOTDIR
+	}
+
+	if _, exists := d.nodes[name]; exists {
+		return nil, fuse.EEXIST
+	}
+
+	i := m.nextId
+	m.nextId++
+	d.nodes[name] = i
+
+	now := time.Now()
+	m.inodes[i] = &iNode{
+		dir: &memDir{
+			parent: n,
+			nodes:  make(map[string]int64),
+		},
+		ctime: now,
+		mtime: now,
+		mode:  mode | fuse.S_IFDIR,
+	}
+
+	e := &fuse.EntryParam{
+		Ino:          i,
+		Attr:         m.stat(i),
+		AttrTimeout:  1.0,
+		EntryTimeout: 1.0,
+	}
+	return e, fuse.OK
+}
+
 func (m *MemFs) stat(ino int64) *fuse.InoAttr {
-	fmt.Println("stat", ino)
 	i := m.inodes[ino]
 	if i == nil {
-		fmt.Println("No such node", ino)
 		return nil
 	}
 
@@ -81,10 +118,8 @@ func (m *MemFs) stat(ino int64) *fuse.InoAttr {
 func (m *MemFs) GetAttr(ino int64, info *fuse.FileInfo) (
 	attr *fuse.InoAttr, err fuse.Status) {
 
-	fmt.Println("GetAttr", ino)
 	s := m.stat(ino)
 	if s == nil {
-		fmt.Println("ENOENT")
 		return nil, fuse.ENOENT
 	} else {
 		return s, fuse.OK
@@ -94,14 +129,18 @@ func (m *MemFs) GetAttr(ino int64, info *fuse.FileInfo) (
 func (m *MemFs) Lookup(parent int64, name string) (
 	entry *fuse.EntryParam, err fuse.Status) {
 
-	fmt.Println("Lookup", parent, name)
-	n := m.inodes[parent]
+	n, present := m.inodes[parent]
+	if !present {
+		return nil, fuse.ENOENT
+	}
 	if n.dir == nil {
-		fmt.Println("ENOTDIR")
 		return nil, fuse.ENOTDIR
 	}
 
-	i := n.dir.nodes[name]
+	i, present := n.dir.nodes[name]
+	if !present {
+		return nil, fuse.ENOENT
+	}
 
 	e := &fuse.EntryParam{
 		Ino:          i,
@@ -114,7 +153,6 @@ func (m *MemFs) Lookup(parent int64, name string) (
 }
 
 func (m *MemFs) StatFs(ino int64, s *fuse.StatVfs) fuse.Status {
-	fmt.Println("Statfs", ino)
 	s.Files = int64(len(m.inodes))
 	return fuse.OK
 }
@@ -122,34 +160,35 @@ func (m *MemFs) StatFs(ino int64, s *fuse.StatVfs) fuse.Status {
 func (m *MemFs) ReadDir(ino int64, fi *fuse.FileInfo, off int64, size int,
 	w fuse.DirEntryWriter) fuse.Status {
 
-	fmt.Println("ReadDir", ino)
 	n := m.inodes[ino]
 	if n == nil {
-		fmt.Println("ENOENT")
 		return fuse.ENOENT
 	}
 	d := n.dir
 	if d == nil {
-		fmt.Println("ENOTDIR")
 		return fuse.ENOTDIR
 	}
 
-	idx := int64(0)
-	if idx >= off {
-		w.Add(".", ino, n.mode, 1)
-	}
-	idx++
-	if idx >= off {
-		if d.parent != nil {
-			w.Add("..", d.parent.id, d.parent.mode, 2)
+	idx := int64(1)
+	if idx > off {
+		if !w.Add(".", ino, n.mode, idx) {
+			return fuse.OK
 		}
 	}
 	idx++
+	if d.parent != nil {
+		if idx > off {
+			if !w.Add("..", d.parent.id, d.parent.mode, idx) {
+				return fuse.OK
+			}
+		}
+		idx++
+	}
 
 	for name, i := range d.nodes {
-		if idx >= off {
+		if idx > off {
 			node := m.inodes[i]
-			if !w.Add(name, i, node.mode, idx+1) {
+			if !w.Add(name, i, node.mode, idx) {
 				return fuse.OK
 			}
 		}
@@ -159,14 +198,11 @@ func (m *MemFs) ReadDir(ino int64, fi *fuse.FileInfo, off int64, size int,
 }
 
 func (m *MemFs) Open(ino int64, fi *fuse.FileInfo) fuse.Status {
-	fmt.Println("Open", ino)
 	n := m.inodes[ino]
 	if n == nil {
-		fmt.Println("ENOENT")
 		return fuse.ENOENT
 	}
 	if n.dir == nil {
-		fmt.Println("EISDIR")
 		return fuse.EISDIR
 	}
 	return fuse.OK
@@ -195,7 +231,6 @@ func (m *MemFs) Read(p []byte, ino int64, off int64,
 
 func main() {
 	args := os.Args
-	fmt.Println(args)
 	ops := NewMemFs()
 	fuse.MountAndRun(args, ops)
 }

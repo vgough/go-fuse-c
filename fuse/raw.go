@@ -22,6 +22,7 @@ type RawFileSystem interface {
 	// OpenDir
 	// ReleaseDir
 	// FsyncDir
+	MakeDir(ino int64, name string, mode int) (entry *EntryParam, err Status)
 
 	// File handling
 	Open(ino int64, fi *FileInfo) Status
@@ -45,6 +46,8 @@ type StatVfs struct {
 }
 
 type DirEntryWriter interface {
+	// Returns true if the entry was added, false if there is no more space
+	// in the response buffer.
 	Add(name string, ino int64, mode int, next int64) bool
 }
 

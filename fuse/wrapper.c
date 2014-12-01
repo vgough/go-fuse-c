@@ -40,6 +40,7 @@ int MountAndRun(int id, int argc, char *argv[]) {
   return err ? 1 : 0;
 }
 
+// Returns 0 on success.
 int DirBufAdd(struct DirBuf *db, const char *name, fuse_ino_t ino, int mode,
               off_t next) {
   struct stat stbuf = emptyStat;

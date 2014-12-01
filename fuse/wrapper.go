@@ -110,6 +110,18 @@ func ll_Read(id C.int, ino C.fuse_ino_t, off C.off_t,
 	return C.int(err)
 }
 
+//export ll_Mkdir
+func ll_Mkdir(id C.int, dir C.fuse_ino_t, name *C.char, mode C.mode_t,
+	cent *C.struct_fuse_entry_param) C.int {
+
+	ops := rawFsMap[int(id)]
+	ent, err := ops.MakeDir(int64(dir), C.GoString(name), int(mode))
+	if err == OK {
+		ent.toCEntry(cent)
+	}
+	return C.int(err)
+}
+
 type dirBuf struct {
 	db *C.struct_DirBuf
 }

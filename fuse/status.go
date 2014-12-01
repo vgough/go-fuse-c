@@ -11,6 +11,7 @@ const (
 	OK      = Status(0)
 	EACCES  = Status(syscall.EACCES)
 	EBUSY   = Status(syscall.EBUSY)
+	EEXIST  = Status(syscall.EEXIST)
 	EINVAL  = Status(syscall.EINVAL)
 	EIO     = Status(syscall.EIO)
 	ENOENT  = Status(syscall.ENOENT)

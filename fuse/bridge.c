@@ -1,13 +1,13 @@
 #include "wrapper.h"
 
-#include <errno.h>                      // IWYU pragma: keep
-#include <stdint.h>                     // for uint64_t
-#include <stdlib.h>                     // for free
-#include <sys/stat.h>                   // for stat, mode_t, dev_t
-#include <sys/statvfs.h>                // for statvfs
-#include <unistd.h>                     // for off_t, getgid, getuid
+#include <errno.h>        // IWYU pragma: keep
+#include <stdint.h>       // for uint64_t
+#include <stdlib.h>       // for free
+#include <sys/stat.h>     // for stat, mode_t, dev_t
+#include <sys/statvfs.h>  // for statvfs
+#include <unistd.h>       // for off_t, getgid, getuid
 
-#include "_cgo_export.h"                // IWYU pragma: keep
+#include "_cgo_export.h"  // IWYU pragma: keep
 
 static const struct stat emptyStat;
 static const struct fuse_entry_param emptyEntryParam;
@@ -60,8 +60,19 @@ void bridge_setattr(fuse_req_t req, fuse_ino_t ino, struct stat *attr,
 void bridge_readlink(fuse_req_t req, fuse_ino_t ino);
 void bridge_mknod(fuse_req_t req, fuse_ino_t parent, const char *name,
                   mode_t mode, dev_t rdev);
+
 void bridge_mkdir(fuse_req_t req, fuse_ino_t parent, const char *name,
-                  mode_t mode);
+                  mode_t mode) {
+  int id = *(int *)fuse_req_userdata(req);
+  struct fuse_entry_param entry = emptyEntryParam;
+  int err = ll_Mkdir(id, parent, (char *)name, mode, &entry);
+  if (err != 0) {
+    fuse_reply_err(req, err);
+  } else {
+    fuse_reply_entry(req, &entry);
+  }
+}
+
 void bridge_unlink(fuse_req_t req, fuse_ino_t parent, const char *name);
 void bridge_rmdir(fuse_req_t req, fuse_ino_t parent, const char *name);
 void bridge_symlink(fuse_req_t req, const char *link, fuse_ino_t parent,
@@ -180,4 +191,5 @@ struct fuse_lowlevel_ops bridge_ll_ops = {.init = bridge_init,
                                           .getattr = bridge_getattr,
                                           .readdir = bridge_readdir,
                                           .open = bridge_open,
-                                          .read = bridge_read, };
+                                          .read = bridge_read,
+                                          .mkdir = bridge_mkdir};
