@@ -52,16 +52,24 @@ func NewMemFs() *MemFs {
 	return m
 }
 
-func (m *MemFs) MakeDir(dir int64, name string, mode int) (*fuse.EntryParam, fuse.Status) {
-	n := m.inodes[dir]
+func (m *MemFs) dirNode(parent int64) (*iNode, fuse.Status) {
+	n := m.inodes[parent]
 	if n == nil {
 		return nil, fuse.ENOENT
 	}
-	d := n.dir
-	if d == nil {
+	if n.dir == nil {
 		return nil, fuse.ENOTDIR
 	}
+	return n, fuse.OK
+}
 
+func (m *MemFs) Mkdir(dir int64, name string, mode int) (*fuse.EntryParam, fuse.Status) {
+	n, err := m.dirNode(dir)
+	if err != fuse.OK {
+		return nil, err
+	}
+
+	d := n.dir
 	if _, exists := d.nodes[name]; exists {
 		return nil, fuse.EEXIST
 	}
@@ -88,6 +96,30 @@ func (m *MemFs) MakeDir(dir int64, name string, mode int) (*fuse.EntryParam, fus
 		EntryTimeout: 1.0,
 	}
 	return e, fuse.OK
+}
+
+func (m *MemFs) Rmdir(dir int64, name string) fuse.Status {
+	n, err := m.dirNode(dir)
+	if err != fuse.OK {
+		return err
+	}
+	cid, present := n.dir.nodes[name]
+	if !present {
+		return fuse.EEXIST
+	}
+
+	c := m.inodes[cid]
+	if c.dir == nil {
+		return fuse.ENOTDIR
+	}
+
+	if len(c.dir.nodes) > 0 {
+		return fuse.ENOTEMPTY
+	}
+
+	delete(m.inodes, c.id)
+	delete(n.dir.nodes, name)
+	return fuse.OK
 }
 
 func (m *MemFs) stat(ino int64) *fuse.InoAttr {
@@ -129,16 +161,13 @@ func (m *MemFs) GetAttr(ino int64, info *fuse.FileInfo) (
 func (m *MemFs) Lookup(parent int64, name string) (
 	entry *fuse.EntryParam, err fuse.Status) {
 
-	n, present := m.inodes[parent]
-	if !present {
-		return nil, fuse.ENOENT
-	}
-	if n.dir == nil {
-		return nil, fuse.ENOTDIR
+	n, err := m.dirNode(parent)
+	if err != fuse.OK {
+		return nil, err
 	}
 
-	i, present := n.dir.nodes[name]
-	if !present {
+	i, exist := n.dir.nodes[name]
+	if !exist {
 		return nil, fuse.ENOENT
 	}
 
@@ -160,14 +189,11 @@ func (m *MemFs) StatFs(ino int64, s *fuse.StatVfs) fuse.Status {
 func (m *MemFs) ReadDir(ino int64, fi *fuse.FileInfo, off int64, size int,
 	w fuse.DirEntryWriter) fuse.Status {
 
-	n := m.inodes[ino]
-	if n == nil {
-		return fuse.ENOENT
+	n, err := m.dirNode(ino)
+	if err != fuse.OK {
+		return err
 	}
 	d := n.dir
-	if d == nil {
-		return fuse.ENOTDIR
-	}
 
 	idx := int64(1)
 	if idx > off {

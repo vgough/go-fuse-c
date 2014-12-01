@@ -22,7 +22,8 @@ type RawFileSystem interface {
 	// OpenDir
 	// ReleaseDir
 	// FsyncDir
-	MakeDir(ino int64, name string, mode int) (entry *EntryParam, err Status)
+	Mkdir(parent int64, name string, mode int) (entry *EntryParam, err Status)
+	Rmdir(parent int64, name string) Status
 
 	// File handling
 	Open(ino int64, fi *FileInfo) Status

@@ -74,7 +74,13 @@ void bridge_mkdir(fuse_req_t req, fuse_ino_t parent, const char *name,
 }
 
 void bridge_unlink(fuse_req_t req, fuse_ino_t parent, const char *name);
-void bridge_rmdir(fuse_req_t req, fuse_ino_t parent, const char *name);
+
+void bridge_rmdir(fuse_req_t req, fuse_ino_t parent, const char *name) {
+  int id = *(int *)fuse_req_userdata(req);
+  int err = ll_Rmdir(id, parent, (char *)name);
+  fuse_reply_err(req, err);
+}
+
 void bridge_symlink(fuse_req_t req, const char *link, fuse_ino_t parent,
                     const char *name);
 void bridge_rename(fuse_req_t req, fuse_ino_t parent, const char *name,
@@ -187,9 +193,41 @@ struct fuse_lowlevel_ops bridge_ll_ops = {.init = bridge_init,
                                           .destroy = bridge_destroy,
                                           .lookup = bridge_lookup,
                                           .forget = bridge_forget,
-                                          .statfs = bridge_statfs,
                                           .getattr = bridge_getattr,
-                                          .readdir = bridge_readdir,
+                                          //.setattr
+                                          //.readlink
+                                          //.mknod
+                                          .mkdir = bridge_mkdir,
+                                          //.unlink
+                                          .rmdir = bridge_rmdir,
+                                          //.symlink
+                                          //.rename
+                                          //.link
                                           .open = bridge_open,
                                           .read = bridge_read,
-                                          .mkdir = bridge_mkdir};
+                                          //.write
+                                          //.flush
+                                          //.release
+                                          //.fsync
+                                          //.opendir
+                                          .readdir = bridge_readdir,
+                                          //.releasedir
+                                          //.fsyncdir
+                                          .statfs = bridge_statfs,
+                                          //.setxattr
+                                          //.getxattr
+                                          //.listxattr
+                                          //.removexattr
+                                          //.access
+                                          //.create
+                                          //.getlk
+                                          //.setlk
+                                          //.bmap
+                                          //.ioctl
+                                          //.poll
+                                          //.write_buf
+                                          //.retrieve_reply
+                                          //.forget_multi
+                                          //.flock
+                                          //.fallocate
+};

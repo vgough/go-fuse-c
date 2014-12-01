@@ -16,22 +16,22 @@ func Version() int {
 
 //export ll_Init
 func ll_Init(id C.int, cinfo *C.struct_fuse_conn_info) {
-	ops := rawFsMap[int(id)]
+	fs := rawFsMap[int(id)]
 	info := &ConnInfo{}
-	ops.Init(info)
+	fs.Init(info)
 }
 
 //export ll_Destroy
 func ll_Destroy(id C.int) {
-	ops := rawFsMap[int(id)]
-	ops.Destroy()
+	fs := rawFsMap[int(id)]
+	fs.Destroy()
 }
 
 //export ll_StatFs
 func ll_StatFs(id C.int, ino C.fuse_ino_t, stat *C.struct_statvfs) C.int {
-	ops := rawFsMap[int(id)]
+	fs := rawFsMap[int(id)]
 	var s StatVfs
-	err := ops.StatFs(int64(ino), &s)
+	err := fs.StatFs(int64(ino), &s)
 	if err == OK {
 		s.toCStat(stat)
 	}
@@ -42,8 +42,8 @@ func ll_StatFs(id C.int, ino C.fuse_ino_t, stat *C.struct_statvfs) C.int {
 func ll_Lookup(id C.int, dir C.fuse_ino_t, name *C.char,
 	cent *C.struct_fuse_entry_param) C.int {
 
-	ops := rawFsMap[int(id)]
-	ent, err := ops.Lookup(int64(dir), C.GoString(name))
+	fs := rawFsMap[int(id)]
+	ent, err := fs.Lookup(int64(dir), C.GoString(name))
 	if err == OK {
 		ent.toCEntry(cent)
 	}
@@ -52,16 +52,16 @@ func ll_Lookup(id C.int, dir C.fuse_ino_t, name *C.char,
 
 //export ll_Forget
 func ll_Forget(id C.int, ino C.fuse_ino_t, n C.int) {
-	ops := rawFsMap[int(id)]
-	ops.Forget(int64(ino), int(n))
+	fs := rawFsMap[int(id)]
+	fs.Forget(int64(ino), int(n))
 }
 
 //export ll_GetAttr
 func ll_GetAttr(id C.int, ino C.fuse_ino_t, fi *C.struct_fuse_file_info,
 	cattr *C.struct_stat, ctimeout *C.double) C.int {
 
-	ops := rawFsMap[int(id)]
-	attr, err := ops.GetAttr(int64(ino), newFileInfo(fi))
+	fs := rawFsMap[int(id)]
+	attr, err := fs.GetAttr(int64(ino), newFileInfo(fi))
 	if err == OK {
 		attr.toCStat(cattr)
 		(*ctimeout) = C.double(attr.Timeout)
@@ -73,17 +73,17 @@ func ll_GetAttr(id C.int, ino C.fuse_ino_t, fi *C.struct_fuse_file_info,
 func ll_ReadDir(id C.int, ino C.fuse_ino_t, size C.size_t, off C.off_t,
 	fi *C.struct_fuse_file_info, db *C.struct_DirBuf) C.int {
 
-	ops := rawFsMap[int(id)]
+	fs := rawFsMap[int(id)]
 	writer := &dirBuf{db}
-	err := ops.ReadDir(int64(ino), newFileInfo(fi), int64(off), int(size), writer)
+	err := fs.ReadDir(int64(ino), newFileInfo(fi), int64(off), int(size), writer)
 	return C.int(err)
 }
 
 //export ll_Open
 func ll_Open(id C.int, ino C.fuse_ino_t, fi *C.struct_fuse_file_info) C.int {
-	ops := rawFsMap[int(id)]
+	fs := rawFsMap[int(id)]
 	info := newFileInfo(fi)
-	err := ops.Open(int64(ino), info)
+	err := fs.Open(int64(ino), info)
 	if err == OK {
 		fi.fh = C.uint64_t(info.Handle)
 	}
@@ -94,7 +94,7 @@ func ll_Open(id C.int, ino C.fuse_ino_t, fi *C.struct_fuse_file_info) C.int {
 func ll_Read(id C.int, ino C.fuse_ino_t, off C.off_t,
 	fi *C.struct_fuse_file_info, buf unsafe.Pointer, size *C.int) C.int {
 
-	ops := rawFsMap[int(id)]
+	fs := rawFsMap[int(id)]
 
 	// Create slice backed by C buffer.
 	hdr := reflect.SliceHeader{
@@ -103,7 +103,7 @@ func ll_Read(id C.int, ino C.fuse_ino_t, off C.off_t,
 		Cap:  int(*size),
 	}
 	out := *(*[]byte)(unsafe.Pointer(&hdr))
-	n, err := ops.Read(out, int64(ino), int64(off), newFileInfo(fi))
+	n, err := fs.Read(out, int64(ino), int64(off), newFileInfo(fi))
 	if err == OK {
 		*size = C.int(n)
 	}
@@ -114,11 +114,18 @@ func ll_Read(id C.int, ino C.fuse_ino_t, off C.off_t,
 func ll_Mkdir(id C.int, dir C.fuse_ino_t, name *C.char, mode C.mode_t,
 	cent *C.struct_fuse_entry_param) C.int {
 
-	ops := rawFsMap[int(id)]
-	ent, err := ops.MakeDir(int64(dir), C.GoString(name), int(mode))
+	fs := rawFsMap[int(id)]
+	ent, err := fs.Mkdir(int64(dir), C.GoString(name), int(mode))
 	if err == OK {
 		ent.toCEntry(cent)
 	}
+	return C.int(err)
+}
+
+//export ll_Rmdir
+func ll_Rmdir(id C.int, dir C.fuse_ino_t, name *C.char) C.int {
+	fs := rawFsMap[int(id)]
+	err := fs.Rmdir(int64(dir), C.GoString(name))
 	return C.int(err)
 }
 

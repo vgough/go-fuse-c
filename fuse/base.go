@@ -34,7 +34,11 @@ func (d *DefaultRawFileSystem) Read(p []byte, ino int64, off int64, fi *FileInfo
 	return 0, ENOSYS
 }
 
-func (d *DefaultRawFileSystem) MakeDir(dir int64, name string, mode int) (
+func (d *DefaultRawFileSystem) Mkdir(p int64, name string, mode int) (
 	entry *EntryParam, err Status) {
 	return nil, ENOSYS
+}
+
+func (d *DefaultRawFileSystem) Rmdir(p int64, name string) Status {
+	return ENOSYS
 }
