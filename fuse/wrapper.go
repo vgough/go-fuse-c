@@ -129,6 +129,15 @@ func ll_Rmdir(id C.int, dir C.fuse_ino_t, name *C.char) C.int {
 	return C.int(err)
 }
 
+//export ll_Rename
+func ll_Rename(id C.int, dir C.fuse_ino_t, name *C.char,
+	newdir C.fuse_ino_t, newname *C.char) C.int {
+
+	fs := rawFsMap[int(id)]
+	err := fs.Rename(int64(dir), C.GoString(name), int64(newdir), C.GoString(newname))
+	return C.int(err)
+}
+
 type dirBuf struct {
 	db *C.struct_DirBuf
 }

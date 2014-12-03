@@ -83,8 +83,14 @@ void bridge_rmdir(fuse_req_t req, fuse_ino_t parent, const char *name) {
 
 void bridge_symlink(fuse_req_t req, const char *link, fuse_ino_t parent,
                     const char *name);
+
 void bridge_rename(fuse_req_t req, fuse_ino_t parent, const char *name,
-                   fuse_ino_t newparent, const char *newname);
+                   fuse_ino_t newparent, const char *newname) {
+  int id = *(int *)fuse_req_userdata(req);
+  int err = ll_Rename(id, parent, (char *)name, newparent, (char *)newname);
+  fuse_reply_err(req, err);
+}
+
 void bridge_link(fuse_req_t req, fuse_ino_t ino, fuse_ino_t newparent,
                  const char *newname);
 
@@ -201,7 +207,7 @@ struct fuse_lowlevel_ops bridge_ll_ops = {.init = bridge_init,
                                           //.unlink
                                           .rmdir = bridge_rmdir,
                                           //.symlink
-                                          //.rename
+                                          .rename = bridge_rename,
                                           //.link
                                           .open = bridge_open,
                                           .read = bridge_read,

@@ -24,6 +24,7 @@ type RawFileSystem interface {
 	// FsyncDir
 	Mkdir(parent int64, name string, mode int) (entry *EntryParam, err Status)
 	Rmdir(parent int64, name string) Status
+	Rename(dir int64, name string, newdir int64, newname string) Status
 
 	// File handling
 	Open(ino int64, fi *FileInfo) Status

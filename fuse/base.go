@@ -42,3 +42,7 @@ func (d *DefaultRawFileSystem) Mkdir(p int64, name string, mode int) (
 func (d *DefaultRawFileSystem) Rmdir(p int64, name string) Status {
 	return ENOSYS
 }
+
+func (d *DefaultRawFileSystem) Rename(int64, string, int64, string) Status {
+	return ENOSYS
+}
