@@ -98,30 +98,6 @@ func (m *MemFs) Mkdir(dir int64, name string, mode int) (*fuse.EntryParam, fuse.
 	return e, fuse.OK
 }
 
-func (m *MemFs) Rmdir(dir int64, name string) fuse.Status {
-	n, err := m.dirNode(dir)
-	if err != fuse.OK {
-		return err
-	}
-	cid, present := n.dir.nodes[name]
-	if !present {
-		return fuse.EEXIST
-	}
-
-	c := m.inodes[cid]
-	if c.dir == nil {
-		return fuse.ENOTDIR
-	}
-
-	if len(c.dir.nodes) > 0 {
-		return fuse.ENOTEMPTY
-	}
-
-	delete(m.inodes, c.id)
-	delete(n.dir.nodes, name)
-	return fuse.OK
-}
-
 func (m *MemFs) stat(ino int64) *fuse.InoAttr {
 	i := m.inodes[ino]
 	if i == nil {
@@ -231,6 +207,51 @@ func (m *MemFs) Open(ino int64, fi *fuse.FileInfo) fuse.Status {
 	if n.dir == nil {
 		return fuse.EISDIR
 	}
+	return fuse.OK
+}
+
+func (m *MemFs) Rmdir(dir int64, name string) fuse.Status {
+	n, err := m.dirNode(dir)
+	if err != fuse.OK {
+		return err
+	}
+	cid, present := n.dir.nodes[name]
+	if !present {
+		return fuse.EEXIST
+	}
+
+	c := m.inodes[cid]
+	if c.dir == nil {
+		return fuse.ENOTDIR
+	}
+
+	if len(c.dir.nodes) > 0 {
+		return fuse.ENOTEMPTY
+	}
+
+	delete(m.inodes, c.id)
+	delete(n.dir.nodes, name)
+	return fuse.OK
+}
+
+func (m *MemFs) Rename(dir int64, name string, newdir int64, newname string) fuse.Status {
+	od, err := m.dirNode(dir)
+	if err != fuse.OK {
+		return err
+	}
+	oid, present := od.dir.nodes[name]
+	if !present {
+		return fuse.EEXIST
+	}
+
+	nd, err := m.dirNode(newdir)
+	if err != fuse.OK {
+		return err
+	}
+
+	_, present = nd.dir.nodes[newname]
+	nd.dir.nodes[newname] = oid
+	delete(od.dir.nodes, name)
 	return fuse.OK
 }
 
