@@ -9,6 +9,10 @@
 
 #include "_cgo_export.h"  // IWYU pragma: keep
 
+// Bridge methods are FUSE C callbacks.  The callbacks pass through to the
+// corresponding Go function and then translate the return value into the
+// appropriate FUSE result call.
+
 static const struct stat emptyStat;
 static const struct fuse_entry_param emptyEntryParam;
 static const struct statvfs emptyStatVfs;
