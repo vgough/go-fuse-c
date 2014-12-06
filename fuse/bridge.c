@@ -69,6 +69,8 @@ void bridge_mknod(fuse_req_t req, fuse_ino_t parent, const char *name,
                   mode_t mode, dev_t rdev) {
   int id = *(int *)fuse_req_userdata(req);
   struct fuse_entry_param entry = emptyEntryParam;
+  entry.attr.st_uid = getuid();
+  entry.attr.st_gid = getgid();
   int err = ll_Mknod(id, parent, (char *)name, mode, rdev, &entry);
   if (err != 0) {
     fuse_reply_err(req, err);
@@ -81,6 +83,8 @@ void bridge_mkdir(fuse_req_t req, fuse_ino_t parent, const char *name,
                   mode_t mode) {
   int id = *(int *)fuse_req_userdata(req);
   struct fuse_entry_param entry = emptyEntryParam;
+  entry.attr.st_uid = getuid();
+  entry.attr.st_gid = getgid();
   int err = ll_Mkdir(id, parent, (char *)name, mode, &entry);
   if (err != 0) {
     fuse_reply_err(req, err);
