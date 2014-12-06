@@ -326,7 +326,7 @@ func (m *MemFs) Write(p []byte, ino int64, off int64,
 	rl := int(off) + len(p)
 	if rl > cap(n.file.data) {
 		// Extend
-		newSlice := make([]byte, (rl+1)*2)
+		newSlice := make([]byte, rl)
 		copy(newSlice, n.file.data)
 		n.file.data = newSlice
 	}
