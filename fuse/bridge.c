@@ -30,6 +30,8 @@ void bridge_destroy(void *userdata) {
 void bridge_lookup(fuse_req_t req, fuse_ino_t parent, const char *name) {
   int id = *(int *)fuse_req_userdata(req);
   struct fuse_entry_param param = emptyEntryParam;
+  param.attr.st_uid = getuid();
+  param.attr.st_gid = getgid();
   int err = ll_Lookup(id, parent, (char *)name, &param);
   if (err != 0) {
     fuse_reply_err(req, err);
