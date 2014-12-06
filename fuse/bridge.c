@@ -62,8 +62,18 @@ void bridge_getattr(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi) {
 void bridge_setattr(fuse_req_t req, fuse_ino_t ino, struct stat *attr,
                     int to_set, struct fuse_file_info *fi);
 void bridge_readlink(fuse_req_t req, fuse_ino_t ino);
+
 void bridge_mknod(fuse_req_t req, fuse_ino_t parent, const char *name,
-                  mode_t mode, dev_t rdev);
+                  mode_t mode, dev_t rdev) {
+  int id = *(int *)fuse_req_userdata(req);
+  struct fuse_entry_param entry = emptyEntryParam;
+  int err = ll_Mknod(id, parent, (char *)name, mode, rdev, &entry);
+  if (err != 0) {
+    fuse_reply_err(req, err);
+  } else {
+    fuse_reply_entry(req, &entry);
+  }
+}
 
 void bridge_mkdir(fuse_req_t req, fuse_ino_t parent, const char *name,
                   mode_t mode) {
@@ -126,7 +136,17 @@ void bridge_read(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
 }
 
 void bridge_write(fuse_req_t req, fuse_ino_t ino, const char *buf, size_t size,
-                  off_t off, struct fuse_file_info *fi);
+                  off_t off, struct fuse_file_info *fi) {
+  int id = *(int *)fuse_req_userdata(req);
+  size_t written = size;
+  int err = ll_Write(id, ino, (char *)buf, &written, off, fi);
+  if (err == 0) {
+    fuse_reply_write(req, written);
+  } else {
+    fuse_reply_err(req, err);
+  }
+}
+
 void bridge_flush(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi);
 void bridge_release(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi);
 void bridge_fsync(fuse_req_t req, fuse_ino_t ino, int datasync,
@@ -206,7 +226,7 @@ struct fuse_lowlevel_ops bridge_ll_ops = {.init = bridge_init,
                                           .getattr = bridge_getattr,
                                           //.setattr
                                           //.readlink
-                                          //.mknod
+                                          .mknod = bridge_mknod,
                                           .mkdir = bridge_mkdir,
                                           //.unlink
                                           .rmdir = bridge_rmdir,
@@ -215,7 +235,7 @@ struct fuse_lowlevel_ops bridge_ll_ops = {.init = bridge_init,
                                           //.link
                                           .open = bridge_open,
                                           .read = bridge_read,
-                                          //.write
+                                          .write = bridge_write,
                                           //.flush
                                           //.release
                                           //.fsync

@@ -110,6 +110,37 @@ func ll_Read(id C.int, ino C.fuse_ino_t, off C.off_t,
 	return C.int(err)
 }
 
+//export ll_Write
+func ll_Write(id C.int, ino C.fuse_ino_t, buf unsafe.Pointer, n *C.size_t, off C.off_t,
+	fi *C.struct_fuse_file_info) C.int {
+
+	fs := rawFsMap[int(id)]
+	// Create slice backed by C buffer.
+	hdr := reflect.SliceHeader{
+		Data: uintptr(buf),
+		Len:  int(*n),
+		Cap:  int(*n),
+	}
+	in := *(*[]byte)(unsafe.Pointer(&hdr))
+	written, err := fs.Write(in, int64(ino), int64(off), newFileInfo(fi))
+	if err == OK {
+		*n = C.size_t(written)
+	}
+	return C.int(err)
+}
+
+//export ll_Mknod
+func ll_Mknod(id C.int, dir C.fuse_ino_t, name *C.char, mode C.mode_t,
+	rdev C.dev_t, cent *C.struct_fuse_entry_param) C.int {
+
+	fs := rawFsMap[int(id)]
+	ent, err := fs.Mknod(int64(dir), C.GoString(name), int(mode), int(rdev))
+	if err == OK {
+		ent.toCEntry(cent)
+	}
+	return C.int(err)
+}
+
 //export ll_Mkdir
 func ll_Mkdir(id C.int, dir C.fuse_ino_t, name *C.char, mode C.mode_t,
 	cent *C.struct_fuse_entry_param) C.int {

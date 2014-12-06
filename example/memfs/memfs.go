@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"github.com/vgough/go-fuse-c/fuse"
 	"os"
 	"time"
@@ -13,7 +12,7 @@ type memDir struct {
 }
 
 type memFile struct {
-	data bytes.Buffer
+	data []byte
 }
 
 type iNode struct {
@@ -63,7 +62,56 @@ func (m *MemFs) dirNode(parent int64) (*iNode, fuse.Status) {
 	return n, fuse.OK
 }
 
-func (m *MemFs) Mkdir(dir int64, name string, mode int) (*fuse.EntryParam, fuse.Status) {
+func (m *MemFs) fileNode(ino int64) (*iNode, fuse.Status) {
+	n := m.inodes[ino]
+	if n == nil {
+		return nil, fuse.ENOENT
+	}
+	if n.file == nil {
+		return nil, fuse.EISDIR
+	}
+	return n, fuse.OK
+}
+
+func (m *MemFs) Mknod(dir int64, name string, mode int, rdev int) (
+	*fuse.EntryParam, fuse.Status) {
+
+	n, err := m.dirNode(dir)
+	if err != fuse.OK {
+		return nil, err
+	}
+
+	d := n.dir
+	if _, exists := d.nodes[name]; exists {
+		return nil, fuse.EEXIST
+	}
+
+	i := m.nextId
+	m.nextId++
+	d.nodes[name] = i
+
+	now := time.Now()
+	m.inodes[i] = &iNode{
+		file: &memFile{
+			data: make([]byte, 0),
+		},
+		ctime: now,
+		mtime: now,
+		mode:  mode | fuse.S_IFREG,
+	}
+
+	e := &fuse.EntryParam{
+		Ino:          i,
+		Attr:         m.stat(i),
+		AttrTimeout:  1.0,
+		EntryTimeout: 1.0,
+	}
+	return e, fuse.OK
+}
+
+func (m *MemFs) Mkdir(dir int64, name string, mode int) (
+	*fuse.EntryParam, fuse.Status) {
+
 	n, err := m.dirNode(dir)
 	if err != fuse.OK {
 		return nil, err
@@ -117,7 +165,7 @@ func (m *MemFs) stat(ino int64) *fuse.InoAttr {
 	if i.dir != nil {
 		stat.Size = int64(len(i.dir.nodes))
 	} else {
-		stat.Size = int64(i.file.data.Len())
+		stat.Size = int64(len(i.file.data))
 	}
 
 	return stat
@@ -200,14 +248,8 @@ func (m *MemFs) ReadDir(ino int64, fi *fuse.FileInfo, off int64, size int,
 }
 
 func (m *MemFs) Open(ino int64, fi *fuse.FileInfo) fuse.Status {
-	n := m.inodes[ino]
-	if n == nil {
-		return fuse.ENOENT
-	}
-	if n.dir == nil {
-		return fuse.EISDIR
-	}
-	return fuse.OK
+	_, err := m.fileNode(ino)
+	return err
 }
 
 func (m *MemFs) Rmdir(dir int64, name string) fuse.Status {
@@ -258,15 +300,12 @@ func (m *MemFs) Rename(dir int64, name string, newdir int64, newname string) fus
 func (m *MemFs) Read(p []byte, ino int64, off int64,
 	fi *fuse.FileInfo) (int, fuse.Status) {
 
-	n := m.inodes[ino]
-	if n == nil {
-		return 0, fuse.ENOENT
-	}
-	if n.file == nil {
-		return 0, fuse.EISDIR
+	n, err := m.fileNode(ino)
+	if err != fuse.OK {
+		return 0, err
 	}
 
-	data := n.file.data.Bytes()
+	data := n.file.data
 	l := len(data) - int(off)
 	if l >= 0 {
 		copy(p, data[off:])
@@ -274,6 +313,26 @@ func (m *MemFs) Read(p []byte, ino int64, off int64,
 	} else {
 		return 0, fuse.OK
 	}
+}
+
+func (m *MemFs) Write(p []byte, ino int64, off int64,
+	fi *fuse.FileInfo) (int, fuse.Status) {
+
+	n, err := m.fileNode(ino)
+	if err != fuse.OK {
+		return 0, err
+	}
+
+	rl := int(off) + len(p)
+	if rl > cap(n.file.data) {
+		// Extend
+		newSlice := make([]byte, (rl+1)*2)
+		copy(newSlice, n.file.data)
+		n.file.data = newSlice
+	}
+	slice := n.file.data[0:rl]
+	copy(slice[int(off):rl], p)
+	return len(p), fuse.OK
 }
 
 func main() {

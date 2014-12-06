@@ -25,11 +25,21 @@ func (d *DefaultRawFileSystem) ReadDir(ino int64, fi *FileInfo, off int64, size 
 	return ENOSYS
 }
 
+func (d *DefaultRawFileSystem) Mknod(p int64, name string, mode int, rdev int) (
+	entry *EntryParam, err Status) {
+	return nil, ENOSYS
+}
+
 func (d *DefaultRawFileSystem) Open(ino int64, fi *FileInfo) Status {
 	return ENOSYS
 }
 
 func (d *DefaultRawFileSystem) Read(p []byte, ino int64, off int64, fi *FileInfo) (
+	n int, err Status) {
+	return 0, ENOSYS
+}
+
+func (d *DefaultRawFileSystem) Write(p []byte, ino int64, off int64, fi *FileInfo) (
 	n int, err Status) {
 	return 0, ENOSYS
 }

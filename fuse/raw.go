@@ -11,7 +11,7 @@ type RawFileSystem interface {
 	Destroy()
 	StatFs(ino int64, stat *StatVfs) Status
 
-	Lookup(dir int64, name string) (entry *EntryParam, err Status)
+	Lookup(dir int64, name string) (*EntryParam, Status)
 	Forget(ino int64, n int)
 
 	GetAttr(ino int64, fi *FileInfo) (attr *InoAttr, err Status)
@@ -22,13 +22,15 @@ type RawFileSystem interface {
 	// OpenDir
 	// ReleaseDir
 	// FsyncDir
-	Mkdir(parent int64, name string, mode int) (entry *EntryParam, err Status)
+	Mkdir(parent int64, name string, mode int) (*EntryParam, Status)
 	Rmdir(parent int64, name string) Status
 	Rename(dir int64, name string, newdir int64, newname string) Status
 
 	// File handling
+	Mknod(parent int64, name string, mode int, rdev int) (*EntryParam, Status)
 	Open(ino int64, fi *FileInfo) Status
 	Read(p []byte, ino int64, off int64, fi *FileInfo) (n int, err Status)
+	Write(p []byte, ino int64, off int64, fi *FileInfo) (n int, err Status)
 	// Create
 
 	// TODO: extended attribute handling
