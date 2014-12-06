@@ -160,6 +160,13 @@ func ll_Rmdir(id C.int, dir C.fuse_ino_t, name *C.char) C.int {
 	return C.int(err)
 }
 
+//export ll_Unlink
+func ll_Unlink(id C.int, dir C.fuse_ino_t, name *C.char) C.int {
+	fs := rawFsMap[int(id)]
+	err := fs.Unlink(int64(dir), C.GoString(name))
+	return C.int(err)
+}
+
 //export ll_Rename
 func ll_Rename(id C.int, dir C.fuse_ino_t, name *C.char,
 	newdir C.fuse_ino_t, newname *C.char) C.int {

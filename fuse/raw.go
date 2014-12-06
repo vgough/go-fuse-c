@@ -31,6 +31,7 @@ type RawFileSystem interface {
 	Open(ino int64, fi *FileInfo) Status
 	Read(p []byte, ino int64, off int64, fi *FileInfo) (n int, err Status)
 	Write(p []byte, ino int64, off int64, fi *FileInfo) (n int, err Status)
+	Unlink(parent int64, name string) Status
 	// Create
 
 	// TODO: extended attribute handling

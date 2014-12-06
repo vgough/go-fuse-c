@@ -297,6 +297,26 @@ func (m *MemFs) Rename(dir int64, name string, newdir int64, newname string) fus
 	return fuse.OK
 }
 
+func (m *MemFs) Unlink(dir int64, name string) fuse.Status {
+	n, err := m.dirNode(dir)
+	if err != fuse.OK {
+		return err
+	}
+	cid, present := n.dir.nodes[name]
+	if !present {
+		return fuse.EEXIST
+	}
+
+	c := m.inodes[cid]
+	if c.file == nil {
+		return fuse.EISDIR
+	}
+
+	delete(m.inodes, c.id)
+	delete(n.dir.nodes, name)
+	return fuse.OK
+}
+
 func (m *MemFs) Read(p []byte, ino int64, off int64,
 	fi *fuse.FileInfo) (int, fuse.Status) {
 

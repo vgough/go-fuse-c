@@ -87,7 +87,11 @@ void bridge_mkdir(fuse_req_t req, fuse_ino_t parent, const char *name,
   }
 }
 
-void bridge_unlink(fuse_req_t req, fuse_ino_t parent, const char *name);
+void bridge_unlink(fuse_req_t req, fuse_ino_t parent, const char *name) {
+  int id = *(int *)fuse_req_userdata(req);
+  int err = ll_Unlink(id, parent, (char *)name);
+  fuse_reply_err(req, err);
+}
 
 void bridge_rmdir(fuse_req_t req, fuse_ino_t parent, const char *name) {
   int id = *(int *)fuse_req_userdata(req);
@@ -228,7 +232,7 @@ struct fuse_lowlevel_ops bridge_ll_ops = {.init = bridge_init,
                                           //.readlink
                                           .mknod = bridge_mknod,
                                           .mkdir = bridge_mkdir,
-                                          //.unlink
+                                          .unlink = bridge_unlink,
                                           .rmdir = bridge_rmdir,
                                           //.symlink
                                           .rename = bridge_rename,
