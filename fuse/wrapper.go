@@ -63,10 +63,22 @@ func ll_GetAttr(id C.int, ino C.fuse_ino_t, fi *C.struct_fuse_file_info,
 	fs := rawFsMap[int(id)]
 	attr, err := fs.GetAttr(int64(ino), newFileInfo(fi))
 	if err == OK {
-		attr.toCStat(cattr)
-		(*ctimeout) = C.double(attr.Timeout)
+		attr.toCStat(cattr, ctimeout)
 	}
 	return C.int(err)
+}
+
+//export ll_SetAttr
+func ll_SetAttr(id C.int, ino C.fuse_ino_t, attr *C.struct_stat, toSet C.int,
+  fi *C.struct_fuse_file_info, cattr *C.struct_stat, ctimeout *C.double) C.int {
+
+  fs := rawFsMap[int(id)]
+  var ia InoAttr // fill from attr
+  oattr, err := fs.SetAttr(int64(ino), &ia, SetAttrMask(toSet), newFileInfo(fi))
+  if err == OK {
+    oattr.toCStat(cattr, ctimeout)
+  }
+  return C.int(err)
 }
 
 //export ll_ReadDir
@@ -214,7 +226,7 @@ func (s *StatVfs) toCStat(o *C.struct_statvfs) {
 	o.f_namemax = C.ulong(s.NameMax)
 }
 
-func (a *InoAttr) toCStat(o *C.struct_stat) {
+func (a *InoAttr) toCStat(o *C.struct_stat, timeout *C.double) {
 	o.st_ino = C.__ino_t(a.Ino)
 	o.st_mode = C.__mode_t(a.Mode)
 	o.st_nlink = C.__nlink_t(a.Nlink)
@@ -222,6 +234,9 @@ func (a *InoAttr) toCStat(o *C.struct_stat) {
 	toCTime(&o.st_ctim, a.Ctim)
 	toCTime(&o.st_mtim, a.Mtim)
 	toCTime(&o.st_atim, a.Atim)
+  if timeout != nil {
+		(*timeout) = C.double(a.Timeout)
+  }
 }
 
 func toCTime(o *C.struct_timespec, i time.Time) {
@@ -232,7 +247,7 @@ func toCTime(o *C.struct_timespec, i time.Time) {
 func (e *EntryParam) toCEntry(o *C.struct_fuse_entry_param) {
 	o.ino = C.fuse_ino_t(e.Ino)
 	o.generation = C.ulong(e.Generation)
-	e.Attr.toCStat(&o.attr)
+	e.Attr.toCStat(&o.attr, nil)
 	o.attr_timeout = C.double(e.AttrTimeout)
 	o.entry_timeout = C.double(e.EntryTimeout)
 }

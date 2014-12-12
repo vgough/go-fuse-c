@@ -15,7 +15,7 @@ type RawFileSystem interface {
 	Forget(ino int64, n int)
 
 	GetAttr(ino int64, fi *FileInfo) (attr *InoAttr, err Status)
-	// SetAttr
+	SetAttr(ino int64, attr *InoAttr, mask SetAttrMask, fi *FileInfo) (*InoAttr, Status)
 
 	// Directory handling
 	ReadDir(ino int64, fi *FileInfo, off int64, size int, w DirEntryWriter) Status

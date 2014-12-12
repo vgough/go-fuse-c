@@ -20,6 +20,11 @@ func (d *DefaultRawFileSystem) GetAttr(ino int64, fi *FileInfo) (attr *InoAttr, 
 	return nil, ENOSYS
 }
 
+func (d *DefaultRawFileSystem) SetAttr(ino int64, attr *InoAttr, mask SetAttrMask, fi *FileInfo) (
+  *InoAttr, Status) {
+	return nil, ENOSYS
+}
+
 func (d *DefaultRawFileSystem) ReadDir(ino int64, fi *FileInfo, off int64, size int,
 	w DirEntryWriter) Status {
 	return ENOSYS

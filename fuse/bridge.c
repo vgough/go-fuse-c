@@ -62,7 +62,20 @@ void bridge_getattr(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi) {
 }
 
 void bridge_setattr(fuse_req_t req, fuse_ino_t ino, struct stat *attr,
-                    int to_set, struct fuse_file_info *fi);
+                    int to_set, struct fuse_file_info *fi) {
+  int id = *(int *)fuse_req_userdata(req);
+  struct stat out = emptyStat;
+  out.st_uid = getuid();
+  out.st_gid = getgid();
+  double attr_timeout = 1.0;
+  int err = ll_SetAttr(id, ino, attr, to_set, fi, &out, &attr_timeout);
+  if (err != 0) {
+    fuse_reply_err(req, err);
+  } else {
+    fuse_reply_attr(req, &out, attr_timeout);
+  }
+}
+
 void bridge_readlink(fuse_req_t req, fuse_ino_t ino);
 
 void bridge_mknod(fuse_req_t req, fuse_ino_t parent, const char *name,
@@ -234,7 +247,7 @@ struct fuse_lowlevel_ops bridge_ll_ops = {.init = bridge_init,
                                           .lookup = bridge_lookup,
                                           .forget = bridge_forget,
                                           .getattr = bridge_getattr,
-                                          //.setattr
+                                          .setattr = bridge_setattr,
                                           //.readlink
                                           .mknod = bridge_mknod,
                                           .mkdir = bridge_mkdir,
