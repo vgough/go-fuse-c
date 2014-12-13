@@ -74,6 +74,13 @@ func ll_SetAttr(id C.int, ino C.fuse_ino_t, attr *C.struct_stat, toSet C.int,
 
   fs := rawFsMap[int(id)]
   var ia InoAttr // fill from attr
+  ia.Ino = int64(ino)
+  ia.Size = int64(attr.st_size)
+  ia.Mode = int(attr.st_mode)
+  ia.Nlink = int(attr.st_nlink)
+  ia.Atim = time.Unix(int64(attr.st_atim.tv_sec), int64(attr.st_atim.tv_nsec))
+  ia.Ctim = time.Unix(int64(attr.st_ctim.tv_sec), int64(attr.st_ctim.tv_nsec))
+  ia.Mtim = time.Unix(int64(attr.st_mtim.tv_sec), int64(attr.st_mtim.tv_nsec))
   oattr, err := fs.SetAttr(int64(ino), &ia, SetAttrMask(toSet), newFileInfo(fi))
   if err == OK {
     oattr.toCStat(cattr, ctimeout)
