@@ -183,25 +183,25 @@ func (m *MemFs) GetAttr(ino int64, info *fuse.FileInfo) (
 }
 
 func (m *MemFs) SetAttr(ino int64, attr *fuse.InoAttr, mask fuse.SetAttrMask, fi *fuse.FileInfo) (
-  *fuse.InoAttr, fuse.Status) {
+	*fuse.InoAttr, fuse.Status) {
 
 	i := m.inodes[ino]
 	if i == nil {
-    return nil, fuse.ENOENT
+		return nil, fuse.ENOENT
 	}
 
-  if mask & fuse.SET_ATTR_MODE != 0 {
-    i.mode = attr.Mode
-  }
-  if mask & fuse.SET_ATTR_MTIME != 0 {
-    i.mtime = attr.Mtim
-  }
-  if mask & fuse.SET_ATTR_MTIME_NOW != 0 {
-    i.mtime = time.Now()
-  }
+	if mask&fuse.SET_ATTR_MODE != 0 {
+		i.mode = attr.Mode
+	}
+	if mask&fuse.SET_ATTR_MTIME != 0 {
+		i.mtime = attr.Mtim
+	}
+	if mask&fuse.SET_ATTR_MTIME_NOW != 0 {
+		i.mtime = time.Now()
+	}
 
-  s := m.stat(ino)
-  return s, fuse.OK
+	s := m.stat(ino)
+	return s, fuse.OK
 }
 
 func (m *MemFs) Lookup(parent int64, name string) (

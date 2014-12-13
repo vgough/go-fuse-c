@@ -21,7 +21,7 @@ func (d *DefaultRawFileSystem) GetAttr(ino int64, fi *FileInfo) (attr *InoAttr, 
 }
 
 func (d *DefaultRawFileSystem) SetAttr(ino int64, attr *InoAttr, mask SetAttrMask, fi *FileInfo) (
-  *InoAttr, Status) {
+	*InoAttr, Status) {
 	return nil, ENOSYS
 }
 

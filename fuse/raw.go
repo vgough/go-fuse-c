@@ -128,6 +128,9 @@ type InoAttr struct {
 	Mode  int
 	Nlink int
 
+	Uid *int // Defaults to the current uid
+	Gid *int // Defaults to the current gid
+
 	Atim time.Time
 	Ctim time.Time
 	Mtim time.Time
