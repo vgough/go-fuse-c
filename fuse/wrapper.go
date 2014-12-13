@@ -103,6 +103,20 @@ func ll_Open(id C.int, ino C.fuse_ino_t, fi *C.struct_fuse_file_info) C.int {
 	return C.int(err)
 }
 
+//export ll_Release
+func ll_Release(id C.int, ino C.fuse_ino_t, fi *C.struct_fuse_file_info) C.int {
+	fs := rawFsMap[int(id)]
+	err := fs.Release(int64(ino), newFileInfo(fi))
+	return C.int(err)
+}
+
+//export ll_Flush
+func ll_Flush(id C.int, ino C.fuse_ino_t, fi *C.struct_fuse_file_info) C.int {
+	fs := rawFsMap[int(id)]
+	err := fs.Flush(int64(ino), newFileInfo(fi))
+	return C.int(err)
+}
+
 //export ll_Read
 func ll_Read(id C.int, ino C.fuse_ino_t, off C.off_t,
 	fi *C.struct_fuse_file_info, buf unsafe.Pointer, size *C.int) C.int {
@@ -173,6 +187,18 @@ func ll_Rmdir(id C.int, dir C.fuse_ino_t, name *C.char) C.int {
 	return C.int(err)
 }
 
+//export ll_ReadLink
+func ll_ReadLink(id C.int, ino C.fuse_ino_t, err *C.int) *C.char {
+	fs := rawFsMap[int(id)]
+	s, e := fs.ReadLink(int64(ino))
+	*err = C.int(e)
+	if e == OK {
+		return C.CString(s)
+	} else {
+		return nil
+	}
+}
+
 //export ll_Unlink
 func ll_Unlink(id C.int, dir C.fuse_ino_t, name *C.char) C.int {
 	fs := rawFsMap[int(id)]
@@ -194,7 +220,6 @@ type dirBuf struct {
 }
 
 func (d *dirBuf) Add(name string, ino int64, mode int, next int64) bool {
-	// TODO: can we pass pointer to front of name instead of duplicating string?
 	cstr := C.CString(name)
 	res := C.DirBufAdd(d.db, cstr, C.fuse_ino_t(ino), C.int(mode), C.off_t(next))
 	C.free(unsafe.Pointer(cstr))

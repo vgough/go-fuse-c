@@ -16,6 +16,14 @@ func (d *DefaultRawFileSystem) Lookup(dir int64, name string) (entry *EntryParam
 
 func (d *DefaultRawFileSystem) Forget(ino int64, n int) {}
 
+func (d *DefaultRawFileSystem) Release(ino int64, fi *FileInfo) Status {
+	return ENOSYS
+}
+
+func (d *DefaultRawFileSystem) Flush(ino int64, fi *FileInfo) Status {
+	return ENOSYS
+}
+
 func (d *DefaultRawFileSystem) GetAttr(ino int64, fi *FileInfo) (attr *InoAttr, err Status) {
 	return nil, ENOSYS
 }
@@ -23,6 +31,10 @@ func (d *DefaultRawFileSystem) GetAttr(ino int64, fi *FileInfo) (attr *InoAttr, 
 func (d *DefaultRawFileSystem) SetAttr(ino int64, attr *InoAttr, mask SetAttrMask, fi *FileInfo) (
 	*InoAttr, Status) {
 	return nil, ENOSYS
+}
+
+func (d *DefaultRawFileSystem) ReadLink(ino int64) (string, Status) {
+	return "", ENOSYS
 }
 
 func (d *DefaultRawFileSystem) ReadDir(ino int64, fi *FileInfo, off int64, size int,

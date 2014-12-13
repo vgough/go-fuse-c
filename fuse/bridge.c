@@ -76,7 +76,19 @@ void bridge_setattr(fuse_req_t req, fuse_ino_t ino, struct stat *attr,
   }
 }
 
-void bridge_readlink(fuse_req_t req, fuse_ino_t ino);
+void bridge_readlink(fuse_req_t req, fuse_ino_t ino) {
+  int id = *(int *)fuse_req_userdata(req);
+  int err = 0;
+  char *link = ll_ReadLink(id, ino, &err);
+  if (err != 0) {
+    fuse_reply_err(req, err);
+  } else {
+    fuse_reply_readlink(req, link);
+  }
+  if (link != NULL) {
+    free(link);
+  }
+}
 
 void bridge_mknod(fuse_req_t req, fuse_ino_t parent, const char *name,
                   mode_t mode, dev_t rdev) {
@@ -137,7 +149,8 @@ void bridge_open(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi) {
   if (err != 0) {
     fuse_reply_err(req, err);
   } else if (fuse_reply_open(req, fi) == -ENOENT) {
-    // TODO: Request aborted, let Go wrapper know.
+    // Request aborted, let Go wrapper know.
+    ll_Release(id, ino, fi);
   }
 }
 
@@ -170,8 +183,18 @@ void bridge_write(fuse_req_t req, fuse_ino_t ino, const char *buf, size_t size,
   }
 }
 
-void bridge_flush(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi);
-void bridge_release(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi);
+void bridge_flush(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi) {
+  int id = *(int *)fuse_req_userdata(req);
+  int err = ll_Flush(id, ino, fi);
+  fuse_reply_err(req, err);
+}
+
+void bridge_release(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi) {
+  int id = *(int *)fuse_req_userdata(req);
+  int err = ll_Release(id, ino, fi);
+  fuse_reply_err(req, err);
+}
+
 void bridge_fsync(fuse_req_t req, fuse_ino_t ino, int datasync,
                   struct fuse_file_info *fi);
 void bridge_opendir(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi);
@@ -248,7 +271,7 @@ struct fuse_lowlevel_ops bridge_ll_ops = {.init = bridge_init,
                                           .forget = bridge_forget,
                                           .getattr = bridge_getattr,
                                           .setattr = bridge_setattr,
-                                          //.readlink
+                                          .readlink = bridge_readlink,
                                           .mknod = bridge_mknod,
                                           .mkdir = bridge_mkdir,
                                           .unlink = bridge_unlink,
@@ -259,8 +282,8 @@ struct fuse_lowlevel_ops bridge_ll_ops = {.init = bridge_init,
                                           .open = bridge_open,
                                           .read = bridge_read,
                                           .write = bridge_write,
-                                          //.flush
-                                          //.release
+                                          .flush = bridge_flush,
+                                          .release = bridge_release,
                                           //.fsync
                                           //.opendir
                                           .readdir = bridge_readdir,

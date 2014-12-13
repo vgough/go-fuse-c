@@ -13,9 +13,12 @@ type RawFileSystem interface {
 
 	Lookup(dir int64, name string) (*EntryParam, Status)
 	Forget(ino int64, n int)
+	Release(ino int64, fi *FileInfo) Status
+	Flush(ino int64, fi *FileInfo) Status
 
 	GetAttr(ino int64, fi *FileInfo) (attr *InoAttr, err Status)
 	SetAttr(ino int64, attr *InoAttr, mask SetAttrMask, fi *FileInfo) (*InoAttr, Status)
+	ReadLink(ino int64) (string, Status)
 
 	// Directory handling
 	ReadDir(ino int64, fi *FileInfo, off int64, size int, w DirEntryWriter) Status
