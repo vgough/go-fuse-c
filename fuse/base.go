@@ -78,6 +78,10 @@ func (d *DefaultRawFileSystem) Symlink(link string, p int64, name string) (*Entr
 	return nil, ENOSYS
 }
 
+func (d *DefaultRawFileSystem) Link(ino int64, newparent int64, name string) (*EntryParam, Status) {
+	return nil, ENOSYS
+}
+
 func (d *DefaultRawFileSystem) Rename(int64, string, int64, string) Status {
 	return ENOSYS
 }

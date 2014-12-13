@@ -30,6 +30,7 @@ type RawFileSystem interface {
 	Rmdir(parent int64, name string) Status
 	Rename(dir int64, name string, newdir int64, newname string) Status
 	Symlink(link string, parent int64, name string) (*EntryParam, Status)
+	Link(ino int64, newparent int64, name string) (*EntryParam, Status)
 
 	// File handling
 	Mknod(parent int64, name string, mode int, rdev int) (*EntryParam, Status)

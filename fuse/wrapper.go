@@ -205,6 +205,17 @@ func ll_Symlink(id C.int, link *C.char, parent C.fuse_ino_t, name *C.char,
 	return C.int(err)
 }
 
+//export ll_Link
+func ll_Link(id C.int, ino C.fuse_ino_t, newparent C.fuse_ino_t, name *C.char,
+	cent *C.struct_fuse_entry_param) C.int {
+	fs := rawFsMap[int(id)]
+	ent, err := fs.Link(int64(ino), int64(newparent), C.GoString(name))
+	if err == OK {
+		ent.toCEntry(cent)
+	}
+	return C.int(err)
+}
+
 //export ll_ReadLink
 func ll_ReadLink(id C.int, ino C.fuse_ino_t, err *C.int) *C.char {
 	fs := rawFsMap[int(id)]

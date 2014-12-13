@@ -152,7 +152,18 @@ void bridge_rename(fuse_req_t req, fuse_ino_t parent, const char *name,
 }
 
 void bridge_link(fuse_req_t req, fuse_ino_t ino, fuse_ino_t newparent,
-                 const char *newname);
+                 const char *newname) {
+  int id = *(int *)fuse_req_userdata(req);
+  struct fuse_entry_param entry = emptyEntryParam;
+  entry.attr.st_uid = getuid();
+  entry.attr.st_gid = getgid();
+  int err = ll_Link(id, ino, newparent, (char *)newname, &entry);
+  if (err != 0) {
+    fuse_reply_err(req, err);
+  } else {
+    fuse_reply_entry(req, &entry);
+  }
+}
 
 void bridge_open(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi) {
   int id = *(int *)fuse_req_userdata(req);
@@ -294,7 +305,7 @@ struct fuse_lowlevel_ops bridge_ll_ops = {.init = bridge_init,
                                           .rmdir = bridge_rmdir,
                                           .symlink = bridge_symlink,
                                           .rename = bridge_rename,
-                                          //.link
+                                          .link = bridge_link,
                                           .open = bridge_open,
                                           .read = bridge_read,
                                           .write = bridge_write,
