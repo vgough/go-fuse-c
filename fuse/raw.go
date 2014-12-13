@@ -15,6 +15,7 @@ type RawFileSystem interface {
 	Forget(ino int64, n int)
 	Release(ino int64, fi *FileInfo) Status
 	Flush(ino int64, fi *FileInfo) Status
+	FSync(ino int64, datasync int, fi *FileInfo) Status
 
 	GetAttr(ino int64, fi *FileInfo) (attr *InoAttr, err Status)
 	SetAttr(ino int64, attr *InoAttr, mask SetAttrMask, fi *FileInfo) (*InoAttr, Status)
@@ -28,6 +29,7 @@ type RawFileSystem interface {
 	Mkdir(parent int64, name string, mode int) (*EntryParam, Status)
 	Rmdir(parent int64, name string) Status
 	Rename(dir int64, name string, newdir int64, newname string) Status
+	Symlink(link string, parent int64, name string) (*EntryParam, Status)
 
 	// File handling
 	Mknod(parent int64, name string, mode int, rdev int) (*EntryParam, Status)

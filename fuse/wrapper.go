@@ -110,6 +110,13 @@ func ll_Release(id C.int, ino C.fuse_ino_t, fi *C.struct_fuse_file_info) C.int {
 	return C.int(err)
 }
 
+//export ll_FSync
+func ll_FSync(id C.int, ino C.fuse_ino_t, datasync C.int, fi *C.struct_fuse_file_info) C.int {
+	fs := rawFsMap[int(id)]
+	err := fs.FSync(int64(ino), int(datasync), newFileInfo(fi))
+	return C.int(err)
+}
+
 //export ll_Flush
 func ll_Flush(id C.int, ino C.fuse_ino_t, fi *C.struct_fuse_file_info) C.int {
 	fs := rawFsMap[int(id)]
@@ -184,6 +191,17 @@ func ll_Mkdir(id C.int, dir C.fuse_ino_t, name *C.char, mode C.mode_t,
 func ll_Rmdir(id C.int, dir C.fuse_ino_t, name *C.char) C.int {
 	fs := rawFsMap[int(id)]
 	err := fs.Rmdir(int64(dir), C.GoString(name))
+	return C.int(err)
+}
+
+//export ll_Symlink
+func ll_Symlink(id C.int, link *C.char, parent C.fuse_ino_t, name *C.char,
+	cent *C.struct_fuse_entry_param) C.int {
+	fs := rawFsMap[int(id)]
+	ent, err := fs.Symlink(C.GoString(link), int64(parent), C.GoString(name))
+	if err == OK {
+		ent.toCEntry(cent)
+	}
 	return C.int(err)
 }
 

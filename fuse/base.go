@@ -20,6 +20,10 @@ func (d *DefaultRawFileSystem) Release(ino int64, fi *FileInfo) Status {
 	return ENOSYS
 }
 
+func (d *DefaultRawFileSystem) FSync(ino int64, datasync int, fi *FileInfo) Status {
+	return ENOSYS
+}
+
 func (d *DefaultRawFileSystem) Flush(ino int64, fi *FileInfo) Status {
 	return ENOSYS
 }
@@ -68,6 +72,10 @@ func (d *DefaultRawFileSystem) Mkdir(p int64, name string, mode int) (
 
 func (d *DefaultRawFileSystem) Rmdir(p int64, name string) Status {
 	return ENOSYS
+}
+
+func (d *DefaultRawFileSystem) Symlink(link string, p int64, name string) (*EntryParam, Status) {
+	return nil, ENOSYS
 }
 
 func (d *DefaultRawFileSystem) Rename(int64, string, int64, string) Status {

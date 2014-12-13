@@ -131,7 +131,18 @@ void bridge_rmdir(fuse_req_t req, fuse_ino_t parent, const char *name) {
 }
 
 void bridge_symlink(fuse_req_t req, const char *link, fuse_ino_t parent,
-                    const char *name);
+                    const char *name) {
+  int id = *(int *)fuse_req_userdata(req);
+  struct fuse_entry_param entry = emptyEntryParam;
+  entry.attr.st_uid = getuid();
+  entry.attr.st_gid = getgid();
+  int err = ll_Symlink(id, (char *)link, parent, (char *)name, &entry);
+  if (err != 0) {
+    fuse_reply_err(req, err);
+  } else {
+    fuse_reply_entry(req, &entry);
+  }
+}
 
 void bridge_rename(fuse_req_t req, fuse_ino_t parent, const char *name,
                    fuse_ino_t newparent, const char *newname) {
@@ -196,7 +207,12 @@ void bridge_release(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi) {
 }
 
 void bridge_fsync(fuse_req_t req, fuse_ino_t ino, int datasync,
-                  struct fuse_file_info *fi);
+                  struct fuse_file_info *fi) {
+  int id = *(int *)fuse_req_userdata(req);
+  int err = ll_FSync(id, ino, datasync, fi);
+  fuse_reply_err(req, err);
+}
+
 void bridge_opendir(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi);
 
 void bridge_readdir(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
@@ -276,7 +292,7 @@ struct fuse_lowlevel_ops bridge_ll_ops = {.init = bridge_init,
                                           .mkdir = bridge_mkdir,
                                           .unlink = bridge_unlink,
                                           .rmdir = bridge_rmdir,
-                                          //.symlink
+                                          .symlink = bridge_symlink,
                                           .rename = bridge_rename,
                                           //.link
                                           .open = bridge_open,
@@ -284,7 +300,7 @@ struct fuse_lowlevel_ops bridge_ll_ops = {.init = bridge_init,
                                           .write = bridge_write,
                                           .flush = bridge_flush,
                                           .release = bridge_release,
-                                          //.fsync
+                                          .fsync = bridge_fsync,
                                           //.opendir
                                           .readdir = bridge_readdir,
                                           //.releasedir
