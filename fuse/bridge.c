@@ -14,7 +14,7 @@
 // appropriate FUSE result call.
 
 static const struct stat emptyStat;
-static const struct fuse_entry_param emptyEntryParam;
+static const struct fuse_entry_param emptyEntry;
 static const struct statvfs emptyStatVfs;
 
 void bridge_init(void *userdata, struct fuse_conn_info *conn) {
@@ -29,15 +29,15 @@ void bridge_destroy(void *userdata) {
 
 void bridge_lookup(fuse_req_t req, fuse_ino_t parent, const char *name) {
   int id = *(int *)fuse_req_userdata(req);
-  struct fuse_entry_param param = emptyEntryParam;
-  param.attr.st_uid = getuid();
-  param.attr.st_gid = getgid();
-  int err = ll_Lookup(id, parent, (char *)name, &param);
+  struct fuse_entry_param entry = emptyEntry;
+  entry.attr.st_uid = getuid();
+  entry.attr.st_gid = getgid();
+  int err = ll_Lookup(id, parent, (char *)name, &entry);
   if (err != 0) {
     fuse_reply_err(req, err);
-  } else if (fuse_reply_entry(req, &param) == -ENOENT) {
+  } else if (fuse_reply_entry(req, &entry) == -ENOENT) {
     // Request aborted, tell filesystem that reference was dropped.
-    ll_Forget(id, param.ino, 1);
+    ll_Forget(id, entry.ino, 1);
   }
 }
 
@@ -93,7 +93,7 @@ void bridge_readlink(fuse_req_t req, fuse_ino_t ino) {
 void bridge_mknod(fuse_req_t req, fuse_ino_t parent, const char *name,
                   mode_t mode, dev_t rdev) {
   int id = *(int *)fuse_req_userdata(req);
-  struct fuse_entry_param entry = emptyEntryParam;
+  struct fuse_entry_param entry = emptyEntry;
   entry.attr.st_uid = getuid();
   entry.attr.st_gid = getgid();
   int err = ll_Mknod(id, parent, (char *)name, mode, rdev, &entry);
@@ -107,7 +107,7 @@ void bridge_mknod(fuse_req_t req, fuse_ino_t parent, const char *name,
 void bridge_mkdir(fuse_req_t req, fuse_ino_t parent, const char *name,
                   mode_t mode) {
   int id = *(int *)fuse_req_userdata(req);
-  struct fuse_entry_param entry = emptyEntryParam;
+  struct fuse_entry_param entry = emptyEntry;
   entry.attr.st_uid = getuid();
   entry.attr.st_gid = getgid();
   int err = ll_Mkdir(id, parent, (char *)name, mode, &entry);
@@ -133,7 +133,7 @@ void bridge_rmdir(fuse_req_t req, fuse_ino_t parent, const char *name) {
 void bridge_symlink(fuse_req_t req, const char *link, fuse_ino_t parent,
                     const char *name) {
   int id = *(int *)fuse_req_userdata(req);
-  struct fuse_entry_param entry = emptyEntryParam;
+  struct fuse_entry_param entry = emptyEntry;
   entry.attr.st_uid = getuid();
   entry.attr.st_gid = getgid();
   int err = ll_Symlink(id, (char *)link, parent, (char *)name, &entry);
@@ -154,7 +154,7 @@ void bridge_rename(fuse_req_t req, fuse_ino_t parent, const char *name,
 void bridge_link(fuse_req_t req, fuse_ino_t ino, fuse_ino_t newparent,
                  const char *newname) {
   int id = *(int *)fuse_req_userdata(req);
-  struct fuse_entry_param entry = emptyEntryParam;
+  struct fuse_entry_param entry = emptyEntry;
   entry.attr.st_uid = getuid();
   entry.attr.st_gid = getgid();
   int err = ll_Link(id, ino, newparent, (char *)newname, &entry);

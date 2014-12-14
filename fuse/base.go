@@ -10,7 +10,7 @@ func (d *DefaultRawFileSystem) StatFs(ino int64, stat *StatVfs) Status {
 	return ENOSYS
 }
 
-func (d *DefaultRawFileSystem) Lookup(dir int64, name string) (entry *EntryParam, err Status) {
+func (d *DefaultRawFileSystem) Lookup(dir int64, name string) (entry *Entry, err Status) {
 	return nil, ENOSYS
 }
 
@@ -47,7 +47,7 @@ func (d *DefaultRawFileSystem) ReadDir(ino int64, fi *FileInfo, off int64, size 
 }
 
 func (d *DefaultRawFileSystem) Mknod(p int64, name string, mode int, rdev int) (
-	entry *EntryParam, err Status) {
+	entry *Entry, err Status) {
 	return nil, ENOSYS
 }
 
@@ -66,7 +66,7 @@ func (d *DefaultRawFileSystem) Write(p []byte, ino int64, off int64, fi *FileInf
 }
 
 func (d *DefaultRawFileSystem) Mkdir(p int64, name string, mode int) (
-	entry *EntryParam, err Status) {
+	entry *Entry, err Status) {
 	return nil, ENOSYS
 }
 
@@ -74,11 +74,11 @@ func (d *DefaultRawFileSystem) Rmdir(p int64, name string) Status {
 	return ENOSYS
 }
 
-func (d *DefaultRawFileSystem) Symlink(link string, p int64, name string) (*EntryParam, Status) {
+func (d *DefaultRawFileSystem) Symlink(link string, p int64, name string) (*Entry, Status) {
 	return nil, ENOSYS
 }
 
-func (d *DefaultRawFileSystem) Link(ino int64, newparent int64, name string) (*EntryParam, Status) {
+func (d *DefaultRawFileSystem) Link(ino int64, newparent int64, name string) (*Entry, Status) {
 	return nil, ENOSYS
 }
 

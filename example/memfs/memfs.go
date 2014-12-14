@@ -74,7 +74,7 @@ func (m *MemFs) fileNode(ino int64) (*iNode, fuse.Status) {
 }
 
 func (m *MemFs) Mknod(dir int64, name string, mode int, rdev int) (
-	*fuse.EntryParam, fuse.Status) {
+	*fuse.Entry, fuse.Status) {
 
 	n, err := m.dirNode(dir)
 	if err != fuse.OK {
@@ -100,7 +100,7 @@ func (m *MemFs) Mknod(dir int64, name string, mode int, rdev int) (
 		mode:  mode | fuse.S_IFREG,
 	}
 
-	e := &fuse.EntryParam{
+	e := &fuse.Entry{
 		Ino:          i,
 		Attr:         m.stat(i),
 		AttrTimeout:  1.0,
@@ -110,7 +110,7 @@ func (m *MemFs) Mknod(dir int64, name string, mode int, rdev int) (
 }
 
 func (m *MemFs) Mkdir(dir int64, name string, mode int) (
-	*fuse.EntryParam, fuse.Status) {
+	*fuse.Entry, fuse.Status) {
 
 	n, err := m.dirNode(dir)
 	if err != fuse.OK {
@@ -137,7 +137,7 @@ func (m *MemFs) Mkdir(dir int64, name string, mode int) (
 		mode:  mode | fuse.S_IFDIR,
 	}
 
-	e := &fuse.EntryParam{
+	e := &fuse.Entry{
 		Ino:          i,
 		Attr:         m.stat(i),
 		AttrTimeout:  1.0,
@@ -205,7 +205,7 @@ func (m *MemFs) SetAttr(ino int64, attr *fuse.InoAttr, mask fuse.SetAttrMask, fi
 }
 
 func (m *MemFs) Lookup(parent int64, name string) (
-	entry *fuse.EntryParam, err fuse.Status) {
+	entry *fuse.Entry, err fuse.Status) {
 
 	n, err := m.dirNode(parent)
 	if err != fuse.OK {
@@ -217,7 +217,7 @@ func (m *MemFs) Lookup(parent int64, name string) (
 		return nil, fuse.ENOENT
 	}
 
-	e := &fuse.EntryParam{
+	e := &fuse.Entry{
 		Ino:          i,
 		Attr:         m.stat(i),
 		AttrTimeout:  1.0,

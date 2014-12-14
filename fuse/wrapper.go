@@ -267,7 +267,7 @@ func newFileInfo(fi *C.struct_fuse_file_info) *FileInfo {
 	}
 }
 
-func (e *EntryParam) toCEntry(o *C.struct_fuse_entry_param) {
+func (e *Entry) toCEntry(o *C.struct_fuse_entry_param) {
 	o.ino = C.fuse_ino_t(e.Ino)
 	o.generation = C.ulong(e.Generation)
 	e.Attr.toCStat(&o.attr, nil)

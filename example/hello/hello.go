@@ -53,14 +53,14 @@ func (h *HelloFs) GetAttr(ino int64, info *fuse.FileInfo) (
 }
 
 func (h *HelloFs) Lookup(parent int64, name string) (
-	entry *fuse.EntryParam, err fuse.Status) {
+	entry *fuse.Entry, err fuse.Status) {
 
 	fmt.Println("Lookup", parent, name)
 	if parent != 1 || name != "hello" {
 		return nil, fuse.ENOENT
 	}
 
-	e := &fuse.EntryParam{
+	e := &fuse.Entry{
 		Ino:          2,
 		Attr:         h.stat(2),
 		AttrTimeout:  1.0,

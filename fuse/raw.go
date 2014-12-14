@@ -11,7 +11,7 @@ type RawFileSystem interface {
 	Destroy()
 	StatFs(ino int64, stat *StatVfs) Status
 
-	Lookup(dir int64, name string) (*EntryParam, Status)
+	Lookup(dir int64, name string) (*Entry, Status)
 	Forget(ino int64, n int)
 	Release(ino int64, fi *FileInfo) Status
 	Flush(ino int64, fi *FileInfo) Status
@@ -26,14 +26,14 @@ type RawFileSystem interface {
 	// OpenDir
 	// ReleaseDir
 	// FsyncDir
-	Mkdir(parent int64, name string, mode int) (*EntryParam, Status)
+	Mkdir(parent int64, name string, mode int) (*Entry, Status)
 	Rmdir(parent int64, name string) Status
 	Rename(dir int64, name string, newdir int64, newname string) Status
-	Symlink(link string, parent int64, name string) (*EntryParam, Status)
-	Link(ino int64, newparent int64, name string) (*EntryParam, Status)
+	Symlink(link string, parent int64, name string) (*Entry, Status)
+	Link(ino int64, newparent int64, name string) (*Entry, Status)
 
 	// File handling
-	Mknod(parent int64, name string, mode int, rdev int) (*EntryParam, Status)
+	Mknod(parent int64, name string, mode int, rdev int) (*Entry, Status)
 	Open(ino int64, fi *FileInfo) Status
 	Read(p []byte, ino int64, off int64, fi *FileInfo) (n int, err Status)
 	Write(p []byte, ino int64, off int64, fi *FileInfo) (n int, err Status)
@@ -84,7 +84,7 @@ type ConnInfo struct {
 	// TODO
 }
 
-type EntryParam struct {
+type Entry struct {
 	/** Unique inode number
 	 *
 	 * In lookup, zero means negative entry (from version 2.5)
