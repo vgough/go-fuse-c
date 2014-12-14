@@ -71,6 +71,7 @@ func (h *HelloFs) Lookup(parent int64, name string) (
 }
 
 func (h *HelloFs) StatFs(ino int64, s *fuse.StatVfs) fuse.Status {
+	fmt.Println("statfs", ino)
 	s.Files = 1
 	s.FilesFree = 0
 	s.Flags = fuse.ST_RDONLY

@@ -4,7 +4,13 @@
 #define FUSE_USE_VERSION 29
 #define _FILE_OFFSET_BITS 64
 
+#if defined(__APPLE__)
+#include <osxfuse/fuse/fuse_lowlevel.h>  // IWYU pragma: export
+#else
+
 #include <fuse/fuse_lowlevel.h>  // IWYU pragma: export
+#endif
+
 #include <sys/types.h>           // for off_t
 
 int MountAndRun(int id, int argc, char *argv[]);

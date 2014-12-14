@@ -1,7 +1,13 @@
 #include "wrapper.h"
 
+#if defined(__APPLE__)
+#include <osxfuse/fuse/fuse_common.h>  // for fuse_mount, etc
+#include <osxfuse/fuse/fuse_opt.h>     // for fuse_opt_free_args, etc
+#else
 #include <fuse/fuse_common.h>  // for fuse_mount, etc
 #include <fuse/fuse_opt.h>     // for fuse_opt_free_args, etc
+#endif
+
 #include <stdio.h>             // for NULL
 #include <sys/stat.h>          // for stat
 #include <sys/types.h>         // for off_t
@@ -10,7 +16,7 @@
 #include "_cgo_export.h"  // IWYU pragma: keep
 
 // bridge ops defined in bridge.c
-struct fuse_lowlevel_ops bridge_ll_ops;
+extern struct fuse_lowlevel_ops bridge_ll_ops;
 static const struct stat emptyStat;
 
 int MountAndRun(int id, int argc, char *argv[]) {
