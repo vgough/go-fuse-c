@@ -155,7 +155,23 @@ type RawFileSystem interface {
 	// Unlink removes a file.
 	Unlink(parent int64, name string) Status
 
-	// Create
+	// Access checks file access permissions.
+	//
+	// This will be called for the access() system call.  If the 'default_permissions' mount option
+	// is given, this method is not called.
+	Access(ino int64, mask int) Status
+
+	// Create creates and opens a file.
+	//
+	// If the file does not exist, first create it with the specified mode and then open it.
+	//
+	// Open flags are available in fi.Flags.
+	//
+	// Filesystems may store an arbitrary file handle in fi.Handle and use this in all other file
+	// operations (Read, Write, Flush, Release, FSync).
+	//
+	// If this method is not implemented, then Mknod and Open methods will be called instead.
+	Create(parent int64, name string, mode int, fi *FileInfo) (*Entry, Status)
 
 	// TODO: extended attribute handling
 }

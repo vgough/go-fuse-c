@@ -200,6 +200,26 @@ func ll_Mknod(id C.int, dir C.fuse_ino_t, name *C.char, mode C.mode_t,
 	return C.int(err)
 }
 
+//export ll_Access
+func ll_Access(id C.int, ino C.fuse_ino_t, mask C.int) C.int {
+	fs := rawFsMap[int(id)]
+	return C.int(fs.Access(int64(ino), int(mask)))
+}
+
+//export ll_Create
+func ll_Create(id C.int, dir C.fuse_ino_t, name *C.char, mode C.mode_t,
+	fi *C.struct_fuse_file_info, cent *C.struct_fuse_entry_param) C.int {
+
+	fs := rawFsMap[int(id)]
+	info := newFileInfo(fi)
+	ent, err := fs.Create(int64(dir), C.GoString(name), int(mode), info)
+	if err == OK {
+		ent.toCEntry(cent)
+		fi.fh = C.uint64_t(info.Handle)
+	}
+	return C.int(err)
+}
+
 //export ll_Mkdir
 func ll_Mkdir(id C.int, dir C.fuse_ino_t, name *C.char, mode C.mode_t,
 	cent *C.struct_fuse_entry_param) C.int {

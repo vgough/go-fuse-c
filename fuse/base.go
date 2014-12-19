@@ -59,6 +59,15 @@ func (d *DefaultRawFileSystem) Mknod(p int64, name string, mode int, rdev int) (
 	return nil, ENOSYS
 }
 
+func (d *DefaultRawFileSystem) Access(ino int64, mode int) Status {
+	return ENOSYS
+}
+
+func (d *DefaultRawFileSystem) Create(p int64, name string, mode int, fi *FileInfo) (
+	entry *Entry, err Status) {
+	return nil, ENOSYS
+}
+
 func (d *DefaultRawFileSystem) Open(ino int64, fi *FileInfo) Status {
 	return ENOSYS
 }
