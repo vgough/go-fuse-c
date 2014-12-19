@@ -101,10 +101,28 @@ func ll_Open(id C.int, ino C.fuse_ino_t, fi *C.struct_fuse_file_info) C.int {
 	return C.int(err)
 }
 
+//export ll_OpenDir
+func ll_OpenDir(id C.int, ino C.fuse_ino_t, fi *C.struct_fuse_file_info) C.int {
+	fs := rawFsMap[int(id)]
+	info := newFileInfo(fi)
+	err := fs.OpenDir(int64(ino), info)
+	if err == OK {
+		fi.fh = C.uint64_t(info.Handle)
+	}
+	return C.int(err)
+}
+
 //export ll_Release
 func ll_Release(id C.int, ino C.fuse_ino_t, fi *C.struct_fuse_file_info) C.int {
 	fs := rawFsMap[int(id)]
 	err := fs.Release(int64(ino), newFileInfo(fi))
+	return C.int(err)
+}
+
+//export ll_ReleaseDir
+func ll_ReleaseDir(id C.int, ino C.fuse_ino_t, fi *C.struct_fuse_file_info) C.int {
+	fs := rawFsMap[int(id)]
+	err := fs.ReleaseDir(int64(ino), newFileInfo(fi))
 	return C.int(err)
 }
 
@@ -113,6 +131,14 @@ func ll_FSync(id C.int, ino C.fuse_ino_t, datasync C.int, fi *C.struct_fuse_file
 	fs := rawFsMap[int(id)]
 	var dataOnly bool = datasync != 0
 	err := fs.FSync(int64(ino), dataOnly, newFileInfo(fi))
+	return C.int(err)
+}
+
+//export ll_FSyncDir
+func ll_FSyncDir(id C.int, ino C.fuse_ino_t, datasync C.int, fi *C.struct_fuse_file_info) C.int {
+	fs := rawFsMap[int(id)]
+	var dataOnly bool = datasync != 0
+	err := fs.FSyncDir(int64(ino), dataOnly, newFileInfo(fi))
 	return C.int(err)
 }
 

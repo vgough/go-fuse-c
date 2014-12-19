@@ -224,7 +224,16 @@ void bridge_fsync(fuse_req_t req, fuse_ino_t ino, int datasync,
   fuse_reply_err(req, err);
 }
 
-void bridge_opendir(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi);
+void bridge_opendir(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi) {
+  int id = *(int *)fuse_req_userdata(req);
+  int err = ll_OpenDir(id, ino, fi);
+  if (err != 0) {
+    fuse_reply_err(req, err);
+  } else if (fuse_reply_open(req, fi) == -ENOENT) {
+    // Request aborted, let Go wrapper know.
+    ll_ReleaseDir(id, ino, fi);
+  }
+}
 
 void bridge_readdir(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
                     struct fuse_file_info *fi) {
@@ -246,9 +255,18 @@ void bridge_readdir(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
 }
 
 void bridge_releasedir(fuse_req_t req, fuse_ino_t ino,
-                       struct fuse_file_info *fi);
+                       struct fuse_file_info *fi) {
+  int id = *(int *)fuse_req_userdata(req);
+  int err = ll_ReleaseDir(id, ino, fi);
+  fuse_reply_err(req, err);
+}
+
 void bridge_fsyncdir(fuse_req_t req, fuse_ino_t ino, int datasync,
-                     struct fuse_file_info *fi);
+                     struct fuse_file_info *fi) {
+  int id = *(int *)fuse_req_userdata(req);
+  int err = ll_FSyncDir(id, ino, datasync, fi);
+  fuse_reply_err(req, err);
+}
 
 void bridge_statfs(fuse_req_t req, fuse_ino_t ino) {
   int id = *(int *)fuse_req_userdata(req);
@@ -312,10 +330,10 @@ struct fuse_lowlevel_ops bridge_ll_ops = {.init = bridge_init,
                                           .flush = bridge_flush,
                                           .release = bridge_release,
                                           .fsync = bridge_fsync,
-                                          //.opendir
+                                          .opendir = bridge_opendir,
                                           .readdir = bridge_readdir,
-                                          //.releasedir
-                                          //.fsyncdir
+                                          .releasedir = bridge_releasedir,
+                                          .fsyncdir = bridge_fsyncdir,
                                           .statfs = bridge_statfs,
                                           //.setxattr
                                           //.getxattr

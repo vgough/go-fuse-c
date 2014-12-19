@@ -20,7 +20,15 @@ func (d *DefaultRawFileSystem) Release(ino int64, fi *FileInfo) Status {
 	return ENOSYS
 }
 
+func (d *DefaultRawFileSystem) ReleaseDir(ino int64, fi *FileInfo) Status {
+	return ENOSYS
+}
+
 func (d *DefaultRawFileSystem) FSync(ino int64, dataOnly bool, fi *FileInfo) Status {
+	return ENOSYS
+}
+
+func (d *DefaultRawFileSystem) FSyncDir(ino int64, dataOnly bool, fi *FileInfo) Status {
 	return ENOSYS
 }
 
@@ -52,6 +60,10 @@ func (d *DefaultRawFileSystem) Mknod(p int64, name string, mode int, rdev int) (
 }
 
 func (d *DefaultRawFileSystem) Open(ino int64, fi *FileInfo) Status {
+	return ENOSYS
+}
+
+func (d *DefaultRawFileSystem) OpenDir(ino int64, fi *FileInfo) Status {
 	return ENOSYS
 }
 

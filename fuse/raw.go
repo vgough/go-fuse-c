@@ -86,9 +86,27 @@ type RawFileSystem interface {
 	// DirEntryWriter is used to add entries to the output buffer.
 	ReadDir(ino int64, fi *FileInfo, off int64, size int, w DirEntryWriter) Status
 
-	// OpenDir
-	// ReleaseDir
-	// FsyncDir
+	// OpenDir opens a directory.
+	//
+	// Filesystems may store an arbitrary file handle in fh.Handle and use this in other directory
+	// operations (ReadDir, ReleaseDir, FsyncDir). Filesystems may not store anything in fi.Handle,
+	// though that makes it impossible to implement standard conforming directory stream operations
+	// in case the contents of the directory can change between opendir and releasedir.
+	OpenDir(ino int64, fi *FileInfo) Status
+
+	// ReleaseDir drops an open file reference.
+	//
+	// For every OpenDir call, there will be exactly one ReleaseDir call.
+	//
+	// fi.Handle will contain the value set by the OpenDir method, or will be undefined if the
+	// OpenDir method didn't set any value.
+	ReleaseDir(ino int64, fi *FileInfo) Status
+
+	// FsyncDir synchronizes directory contents.
+	//
+	// If the dataOnly parameter is true, then only the user data should be flushed, not the
+	// metdata.
+	FSyncDir(ino int64, dataOnly bool, fi *FileInfo) Status
 
 	// Mkdir creates a directory.
 	Mkdir(parent int64, name string, mode int) (*Entry, Status)
