@@ -8,10 +8,10 @@
 #include <fuse/fuse_opt.h>     // for fuse_opt_free_args, etc
 #endif
 
-#include <stdio.h>             // for NULL
-#include <sys/stat.h>          // for stat
-#include <sys/types.h>         // for off_t
-#include <unistd.h>            // for getgid, getuid
+#include <stdio.h>      // for NULL
+#include <sys/stat.h>   // for stat
+#include <sys/types.h>  // for off_t
+#include <unistd.h>     // for getgid, getuid
 
 #include "_cgo_export.h"  // IWYU pragma: keep
 
@@ -47,8 +47,7 @@ int MountAndRun(int id, int argc, char *argv[]) {
 }
 
 // Returns 0 on success.
-int DirBufAdd(struct DirBuf *db, const char *name, fuse_ino_t ino, int mode,
-              off_t next) {
+int DirBufAdd(struct DirBuf *db, const char *name, fuse_ino_t ino, int mode, off_t next) {
   struct stat stbuf = emptyStat;
   stbuf.st_ino = ino;
   stbuf.st_mode = mode;

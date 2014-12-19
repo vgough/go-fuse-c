@@ -11,7 +11,7 @@
 #include <fuse/fuse_lowlevel.h>  // IWYU pragma: export
 #endif
 
-#include <sys/types.h>           // for off_t
+#include <sys/types.h>  // for off_t
 
 int MountAndRun(int id, int argc, char *argv[]);
 
@@ -24,7 +24,6 @@ struct DirBuf {
 };
 
 // Returns 0 on success.
-int DirBufAdd(struct DirBuf *db, const char *name, fuse_ino_t ino, int mode,
-              off_t next);
+int DirBufAdd(struct DirBuf *db, const char *name, fuse_ino_t ino, int mode, off_t next);
 
 #endif  // _WRAPPER_H_
