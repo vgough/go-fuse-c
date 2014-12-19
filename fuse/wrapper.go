@@ -29,8 +29,7 @@ func ll_Destroy(id C.int) {
 //export ll_StatFs
 func ll_StatFs(id C.int, ino C.fuse_ino_t, stat *C.struct_statvfs) C.int {
 	fs := rawFsMap[int(id)]
-	var s StatVfs
-	err := fs.StatFs(int64(ino), &s)
+	s, err := fs.StatFs(int64(ino))
 	if err == OK {
 		s.toCStat(stat)
 	}
@@ -112,7 +111,8 @@ func ll_Release(id C.int, ino C.fuse_ino_t, fi *C.struct_fuse_file_info) C.int {
 //export ll_FSync
 func ll_FSync(id C.int, ino C.fuse_ino_t, datasync C.int, fi *C.struct_fuse_file_info) C.int {
 	fs := rawFsMap[int(id)]
-	err := fs.FSync(int64(ino), int(datasync), newFileInfo(fi))
+	var dataOnly bool = datasync != 0
+	err := fs.FSync(int64(ino), dataOnly, newFileInfo(fi))
 	return C.int(err)
 }
 

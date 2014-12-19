@@ -70,12 +70,15 @@ func (h *HelloFs) Lookup(parent int64, name string) (
 	return e, fuse.OK
 }
 
-func (h *HelloFs) StatFs(ino int64, s *fuse.StatVfs) fuse.Status {
+func (h *HelloFs) StatFs(ino int64) (stat *fuse.StatVfs, err fuse.Status) {
 	fmt.Println("statfs", ino)
-	s.Files = 1
-	s.FilesFree = 0
-	s.Flags = fuse.ST_RDONLY
-	return fuse.OK
+	stat = &fuse.StatVfs{
+		Files:     1,
+		FilesFree: 0,
+		Flags:     fuse.ST_RDONLY,
+	}
+	err = fuse.OK
+	return
 }
 
 func (h *HelloFs) ReadDir(ino int64, fi *fuse.FileInfo, off int64, size int,

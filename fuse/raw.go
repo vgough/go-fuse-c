@@ -7,37 +7,136 @@ import (
 // Raw operations for Fuse's LowLevel API.
 // TODO: allow implementing partial option set.
 type RawFileSystem interface {
+	// Init initializes a filesystem.
+	// Called before any other filesystem method.
 	Init(*ConnInfo)
+
+	// Destroy cleans up a filesystem.
+	// Called on filesystem exit.
 	Destroy()
-	StatFs(ino int64, stat *StatVfs) Status
 
+	// StatFs gets file system statistics.
+	StatFs(ino int64) (*StatVfs, Status)
+
+	// Lookup finds a directory entry by name and get its attributes.
 	Lookup(dir int64, name string) (*Entry, Status)
-	Forget(ino int64, n int)
-	Release(ino int64, fi *FileInfo) Status
-	Flush(ino int64, fi *FileInfo) Status
-	FSync(ino int64, datasync int, fi *FileInfo) Status
 
+	// Forget limits the lifetime of an inode.
+	//
+	// The n parameter indicates the number of lookups previously performed on this inode.
+	// The filesystem may ignore forget calls if the inodes don't need to have a limited lifetime.
+	// On unmount it is not guaranteed that all reference dinodes will receive a forget message.
+	Forget(ino int64, n int)
+
+	// Release drops an open file reference.
+	//
+	// Release is called when there are no more references to an open file: all file descriptors are
+	// closed and all memory mappings are unmapped.
+	//
+	// For every open call, there will be exactly one release call.
+	//
+	// A filesystem may reply with an error, but error values are not returned to the close() or
+	// munmap() which triggered the release.
+	//
+	// fi.Handle will contain the value set by the open method, or will be undefined if the open
+	// method didn't set any value.
+	// fi.Flags will contain the same flags as for open.
+	Release(ino int64, fi *FileInfo) Status
+
+	// Flush is called on each close() of an opened file.
+	//
+	// Since file descriptors can be duplicated (dup, dup2, fork), for one open call there may be
+	// many flush calls.
+	//
+	// fi.Handle will contain the value set by the open method, or will be undefined if the open
+	// method didn't set any value.
+	//
+	// The name of the method is misleading. Unlike fsync, the filesystem is not forced to flush
+	// pending writes.
+	Flush(ino int64, fi *FileInfo) Status
+
+	// Fsync synchronizes file contents.
+	//
+	// If the dataOnly parameter is true, then only the user data should be flushed, not the
+	// metdata.
+	FSync(ino int64, dataOnly bool, fi *FileInfo) Status
+
+	// Getattr gets file attributes.
+	//
+	// fi is for future use, currently always nil.
 	GetAttr(ino int64, fi *FileInfo) (attr *InoAttr, err Status)
+
+	// Setattr sets file attributes.
+	//
+	// In the 'attr' argument, only members indicated by the mask contain valid values.  Other
+	// members contain undefined values.
+	//
+	// If the setattr was invoked from the ftruncate() system call, the fi.Handle will contain the
+	// value set by the open method.  Otherwise, the fi argument may be nil.
 	SetAttr(ino int64, attr *InoAttr, mask SetAttrMask, fi *FileInfo) (*InoAttr, Status)
+
+	// ReadLink reads a symbolic link.
 	ReadLink(ino int64) (string, Status)
 
-	// Directory handling
+	// ReadDir reads a directory.
+	//
+	// fi.Handle will contain the value set by the opendir method, or will be undefined if the
+	// opendir method didn't set any value.
+	//
+	// DirEntryWriter is used to add entries to the output buffer.
 	ReadDir(ino int64, fi *FileInfo, off int64, size int, w DirEntryWriter) Status
+
 	// OpenDir
 	// ReleaseDir
 	// FsyncDir
+
+	// Mkdir creates a directory.
 	Mkdir(parent int64, name string, mode int) (*Entry, Status)
+
+	// Rmdir removes a directory.
 	Rmdir(parent int64, name string) Status
+
+	// Rename renames a file or directory.
 	Rename(dir int64, name string, newdir int64, newname string) Status
+
+	// Symlink creates a symbolic link.
 	Symlink(link string, parent int64, name string) (*Entry, Status)
+
+	// Link creates a hard link.
 	Link(ino int64, newparent int64, name string) (*Entry, Status)
 
-	// File handling
+	// Mknod creates a file node.
+	//
+	// This is used to create a regular file, or special files such as character devices, block
+	// devices, fifo or socket nodes.
 	Mknod(parent int64, name string, mode int, rdev int) (*Entry, Status)
+
+	// Open makes a file available for read or write.
+	//
+	// Open flags are available in fi.Flags
+	//
+	// Filesystems may store an arbitrary file handle in fh.Handle and use this in other file
+	// operations (read, write, flush, release, fsync). Filesystems may also implement stateless file
+	// I/O and not store anything in fi.Handle.
 	Open(ino int64, fi *FileInfo) Status
+
+	// Read reads data from an open file.
+	//
+	// Read should return exactly the number of bytes requested except on EOF or error.
+	//
+	// fi.Handle will contain the value set by the open method, if any.
 	Read(p []byte, ino int64, off int64, fi *FileInfo) (n int, err Status)
+
+	// Write writes data to an open file.
+	//
+	// Write should return exactly the number of bytes requested except on error.
+	//
+	// fi.handle will contain the value set by the open method, if any.
 	Write(p []byte, ino int64, off int64, fi *FileInfo) (n int, err Status)
+
+	// Unlink removes a file.
 	Unlink(parent int64, name string) Status
+
 	// Create
 
 	// TODO: extended attribute handling

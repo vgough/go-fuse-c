@@ -227,9 +227,12 @@ func (m *MemFs) Lookup(parent int64, name string) (
 	return e, fuse.OK
 }
 
-func (m *MemFs) StatFs(ino int64, s *fuse.StatVfs) fuse.Status {
-	s.Files = int64(len(m.inodes))
-	return fuse.OK
+func (m *MemFs) StatFs(ino int64) (stat *fuse.StatVfs, status fuse.Status) {
+	stat = &fuse.StatVfs{
+		Files: int64(len(m.inodes)),
+	}
+	status = fuse.OK
+	return
 }
 
 func (m *MemFs) ReadDir(ino int64, fi *fuse.FileInfo, off int64, size int,

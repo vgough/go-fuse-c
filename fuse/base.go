@@ -6,8 +6,8 @@ type DefaultRawFileSystem struct {
 func (d *DefaultRawFileSystem) Init(*ConnInfo) {}
 
 func (d *DefaultRawFileSystem) Destroy() {}
-func (d *DefaultRawFileSystem) StatFs(ino int64, stat *StatVfs) Status {
-	return ENOSYS
+func (d *DefaultRawFileSystem) StatFs(ino int64) (*StatVfs, Status) {
+	return nil, ENOSYS
 }
 
 func (d *DefaultRawFileSystem) Lookup(dir int64, name string) (entry *Entry, err Status) {
@@ -20,7 +20,7 @@ func (d *DefaultRawFileSystem) Release(ino int64, fi *FileInfo) Status {
 	return ENOSYS
 }
 
-func (d *DefaultRawFileSystem) FSync(ino int64, datasync int, fi *FileInfo) Status {
+func (d *DefaultRawFileSystem) FSync(ino int64, dataOnly bool, fi *FileInfo) Status {
 	return ENOSYS
 }
 
