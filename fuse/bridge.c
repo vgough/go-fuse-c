@@ -346,8 +346,8 @@ struct fuse_lowlevel_ops bridge_ll_ops = {.init = bridge_init,
                                           //.getxattr
                                           //.listxattr
                                           //.removexattr
-                                          //.access
-                                          //.create
+                                          .access = bridge_access,
+                                          .create = bridge_create,
                                           //.getlk
                                           //.setlk
                                           //.bmap
