@@ -5,7 +5,6 @@ import (
 )
 
 // Raw operations for Fuse's LowLevel API.
-// TODO: allow implementing partial option set.
 type RawFileSystem interface {
 	// Init initializes a filesystem.
 	// Called before any other filesystem method.
@@ -172,8 +171,6 @@ type RawFileSystem interface {
 	//
 	// If this method is not implemented, then Mknod and Open methods will be called instead.
 	Create(parent int64, name string, mode int, fi *FileInfo) (*Entry, Status)
-
-	// TODO: extended attribute handling
 }
 
 type StatVfs struct {
