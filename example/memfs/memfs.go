@@ -15,15 +15,18 @@ type memFile struct {
 	data []byte
 }
 
+// iNode is either a directory or a file.
 type iNode struct {
 	id int64
 
+	// Exactly one of dir,file must be set.
 	dir  *memDir
 	file *memFile
 
 	ctime time.Time
 	mtime time.Time
 
+	// Unix permission bits.
 	mode int
 }
 
@@ -38,7 +41,7 @@ func NewMemFs() *MemFs {
 	root := &memDir{nodes: make(map[string]int64)}
 	m := &MemFs{
 		inodes: make(map[int64]*iNode),
-		nextId: 2,
+		nextId: 2, // inode 1 is reserved for the root directory.
 	}
 	now := time.Now()
 	m.inodes[1] = &iNode{
