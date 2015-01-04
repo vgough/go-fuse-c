@@ -1,5 +1,9 @@
 package fuse
 
+// DefaultRawFileSystem provides a filesystem that returns ENOSYS error on all methods.
+// The ENOSYS error signals to FUSE that the operation is not implemented.
+// This implementation is intended to be used as the base implementation for a filesystem, so that
+// all methods not implemented by the derived type will be handled here.
 type DefaultRawFileSystem struct {
 }
 
