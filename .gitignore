@@ -3,6 +3,10 @@
 *.a
 *.so
 
+# Example programs
+hello
+memfs
+
 # Folders
 _obj
 _test
