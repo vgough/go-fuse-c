@@ -13,6 +13,11 @@
 
 #include <sys/types.h>  // for off_t
 
+// Mounts the filesystem and runs the FUSE event loop.
+// This call does not return until the filesystem is unmounted.
+// Returns an error code, or 0 on success.
+//
+// Takes ownership of the arguments, using free() to release them.
 int MountAndRun(int id, int argc, char *argv[]);
 
 struct DirBuf {
