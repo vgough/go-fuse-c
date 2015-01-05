@@ -18,5 +18,5 @@ func MountAndRun(args []string, fs RawFileSystem) int {
 		argv[i] = p
 	}
 	argc := C.int(len(args))
-	return int(C.MountAndRun(C.int(id), argc, &argv[0]))
+	return int(C.MountAndRun(C.int(id), argc, &argv[0], C.getStandardBridgeOps()))
 }

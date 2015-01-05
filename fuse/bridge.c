@@ -317,45 +317,47 @@ void bridge_flock(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi, int
 void bridge_fallocate(fuse_req_t req, fuse_ino_t ino, int mode, off_t offset, off_t length,
                       struct fuse_file_info *fi);
 
-struct fuse_lowlevel_ops bridge_ll_ops = {.init = bridge_init,
-                                          .destroy = bridge_destroy,
-                                          .lookup = bridge_lookup,
-                                          .forget = bridge_forget,
-                                          .getattr = bridge_getattr,
-                                          .setattr = bridge_setattr,
-                                          .readlink = bridge_readlink,
-                                          .mknod = bridge_mknod,
-                                          .mkdir = bridge_mkdir,
-                                          .unlink = bridge_unlink,
-                                          .rmdir = bridge_rmdir,
-                                          .symlink = bridge_symlink,
-                                          .rename = bridge_rename,
-                                          .link = bridge_link,
-                                          .open = bridge_open,
-                                          .read = bridge_read,
-                                          .write = bridge_write,
-                                          .flush = bridge_flush,
-                                          .release = bridge_release,
-                                          .fsync = bridge_fsync,
-                                          .opendir = bridge_opendir,
-                                          .readdir = bridge_readdir,
-                                          .releasedir = bridge_releasedir,
-                                          .fsyncdir = bridge_fsyncdir,
-                                          .statfs = bridge_statfs,
-                                          //.setxattr
-                                          //.getxattr
-                                          //.listxattr
-                                          //.removexattr
-                                          .access = bridge_access,
-                                          .create = bridge_create,
-                                          //.getlk
-                                          //.setlk
-                                          //.bmap
-                                          //.ioctl
-                                          //.poll
-                                          //.write_buf
-                                          //.retrieve_reply
-                                          //.forget_multi
-                                          //.flock
-                                          //.fallocate
+static struct fuse_lowlevel_ops bridge_ll_ops = {.init = bridge_init,
+                                                 .destroy = bridge_destroy,
+                                                 .lookup = bridge_lookup,
+                                                 .forget = bridge_forget,
+                                                 .getattr = bridge_getattr,
+                                                 .setattr = bridge_setattr,
+                                                 .readlink = bridge_readlink,
+                                                 .mknod = bridge_mknod,
+                                                 .mkdir = bridge_mkdir,
+                                                 .unlink = bridge_unlink,
+                                                 .rmdir = bridge_rmdir,
+                                                 .symlink = bridge_symlink,
+                                                 .rename = bridge_rename,
+                                                 .link = bridge_link,
+                                                 .open = bridge_open,
+                                                 .read = bridge_read,
+                                                 .write = bridge_write,
+                                                 .flush = bridge_flush,
+                                                 .release = bridge_release,
+                                                 .fsync = bridge_fsync,
+                                                 .opendir = bridge_opendir,
+                                                 .readdir = bridge_readdir,
+                                                 .releasedir = bridge_releasedir,
+                                                 .fsyncdir = bridge_fsyncdir,
+                                                 .statfs = bridge_statfs,
+                                                 //.setxattr
+                                                 //.getxattr
+                                                 //.listxattr
+                                                 //.removexattr
+                                                 .access = bridge_access,
+                                                 .create = bridge_create,
+                                                 //.getlk
+                                                 //.setlk
+                                                 //.bmap
+                                                 //.ioctl
+                                                 //.poll
+                                                 //.write_buf
+                                                 //.retrieve_reply
+                                                 //.forget_multi
+                                                 //.flock
+                                                 //.fallocate
 };
+
+const struct fuse_lowlevel_ops *getStandardBridgeOps() { return &bridge_ll_ops; }

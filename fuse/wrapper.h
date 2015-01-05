@@ -18,7 +18,10 @@
 // Returns an error code, or 0 on success.
 //
 // Takes ownership of the arguments, using free() to release them.
-int MountAndRun(int id, int argc, char *argv[]);
+int MountAndRun(int id, int argc, char *argv[], const struct fuse_lowlevel_ops *ops);
+
+// Standard bridge ops, which forward to Go bridge methods.
+const struct fuse_lowlevel_ops *getStandardBridgeOps();
 
 struct DirBuf {
   fuse_req_t req;
