@@ -1,7 +1,9 @@
 package fuse
 
-// DefaultRawFileSystem provides a filesystem that returns ENOSYS error on all methods.
-// The ENOSYS error signals to FUSE that the operation is not implemented.
+// DefaultRawFileSystem provides a filesystem that returns a suitable default for all methods.
+// Most methods allow ENOSYS, which signals to FUSE that the operation is not implemented.
+// Other methods simply return success, if the method is optional.
+//
 // This implementation is intended to be used as the base implementation for a filesystem, so that
 // all methods not implemented by the derived type will be handled here.
 type DefaultRawFileSystem struct {
@@ -77,7 +79,7 @@ func (d *DefaultRawFileSystem) Open(ino int64, fi *FileInfo) Status {
 }
 
 func (d *DefaultRawFileSystem) OpenDir(ino int64, fi *FileInfo) Status {
-	return ENOSYS
+	return OK
 }
 
 func (d *DefaultRawFileSystem) Read(p []byte, ino int64, off int64, fi *FileInfo) (
