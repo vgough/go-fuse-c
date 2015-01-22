@@ -6,6 +6,8 @@ package fuse
 // #include <stdlib.h>  // for free()
 import "C"
 
+import "time"
+
 func (s *StatVfs) toCStat(o *C.struct_statvfs) {
 	o.f_bsize = C.ulong(s.BlockSize)
 	o.f_blocks = C.__fsblkcnt64_t(s.Blocks)

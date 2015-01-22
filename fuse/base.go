@@ -1,16 +1,22 @@
 package fuse
 
+// DefaultRawFileSystem provides a filesystem that returns a suitable default for all methods.
+// Most methods allow ENOSYS, which signals to FUSE that the operation is not implemented.
+// Other methods simply return success, if the method is optional.
+//
+// This implementation is intended to be used as the base implementation for a filesystem, so that
+// all methods not implemented by the derived type will be handled here.
 type DefaultRawFileSystem struct {
 }
 
 func (d *DefaultRawFileSystem) Init(*ConnInfo) {}
 
 func (d *DefaultRawFileSystem) Destroy() {}
-func (d *DefaultRawFileSystem) StatFs(ino int64, stat *StatVfs) Status {
-	return ENOSYS
+func (d *DefaultRawFileSystem) StatFs(ino int64) (*StatVfs, Status) {
+	return nil, ENOSYS
 }
 
-func (d *DefaultRawFileSystem) Lookup(dir int64, name string) (entry *EntryParam, err Status) {
+func (d *DefaultRawFileSystem) Lookup(dir int64, name string) (entry *Entry, err Status) {
 	return nil, ENOSYS
 }
 
@@ -20,7 +26,15 @@ func (d *DefaultRawFileSystem) Release(ino int64, fi *FileInfo) Status {
 	return ENOSYS
 }
 
-func (d *DefaultRawFileSystem) FSync(ino int64, datasync int, fi *FileInfo) Status {
+func (d *DefaultRawFileSystem) ReleaseDir(ino int64, fi *FileInfo) Status {
+	return ENOSYS
+}
+
+func (d *DefaultRawFileSystem) FSync(ino int64, dataOnly bool, fi *FileInfo) Status {
+	return ENOSYS
+}
+
+func (d *DefaultRawFileSystem) FSyncDir(ino int64, dataOnly bool, fi *FileInfo) Status {
 	return ENOSYS
 }
 
@@ -47,12 +61,25 @@ func (d *DefaultRawFileSystem) ReadDir(ino int64, fi *FileInfo, off int64, size 
 }
 
 func (d *DefaultRawFileSystem) Mknod(p int64, name string, mode int, rdev int) (
-	entry *EntryParam, err Status) {
+	entry *Entry, err Status) {
+	return nil, ENOSYS
+}
+
+func (d *DefaultRawFileSystem) Access(ino int64, mode int) Status {
+	return ENOSYS
+}
+
+func (d *DefaultRawFileSystem) Create(p int64, name string, mode int, fi *FileInfo) (
+	entry *Entry, err Status) {
 	return nil, ENOSYS
 }
 
 func (d *DefaultRawFileSystem) Open(ino int64, fi *FileInfo) Status {
 	return ENOSYS
+}
+
+func (d *DefaultRawFileSystem) OpenDir(ino int64, fi *FileInfo) Status {
+	return OK
 }
 
 func (d *DefaultRawFileSystem) Read(p []byte, ino int64, off int64, fi *FileInfo) (
@@ -66,7 +93,7 @@ func (d *DefaultRawFileSystem) Write(p []byte, ino int64, off int64, fi *FileInf
 }
 
 func (d *DefaultRawFileSystem) Mkdir(p int64, name string, mode int) (
-	entry *EntryParam, err Status) {
+	entry *Entry, err Status) {
 	return nil, ENOSYS
 }
 
@@ -74,11 +101,11 @@ func (d *DefaultRawFileSystem) Rmdir(p int64, name string) Status {
 	return ENOSYS
 }
 
-func (d *DefaultRawFileSystem) Symlink(link string, p int64, name string) (*EntryParam, Status) {
+func (d *DefaultRawFileSystem) Symlink(link string, p int64, name string) (*Entry, Status) {
 	return nil, ENOSYS
 }
 
-func (d *DefaultRawFileSystem) Link(ino int64, newparent int64, name string) (*EntryParam, Status) {
+func (d *DefaultRawFileSystem) Link(ino int64, newparent int64, name string) (*Entry, Status) {
 	return nil, ENOSYS
 }
 

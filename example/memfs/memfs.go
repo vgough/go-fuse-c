@@ -15,15 +15,18 @@ type memFile struct {
 	data []byte
 }
 
+// iNode is either a directory or a file.
 type iNode struct {
 	id int64
 
+	// Exactly one of dir,file must be set.
 	dir  *memDir
 	file *memFile
 
 	ctime time.Time
 	mtime time.Time
 
+	// Unix permission bits.
 	mode int
 }
 
@@ -38,7 +41,7 @@ func NewMemFs() *MemFs {
 	root := &memDir{nodes: make(map[string]int64)}
 	m := &MemFs{
 		inodes: make(map[int64]*iNode),
-		nextId: 2,
+		nextId: 2, // inode 1 is reserved for the root directory.
 	}
 	now := time.Now()
 	m.inodes[1] = &iNode{
@@ -74,7 +77,7 @@ func (m *MemFs) fileNode(ino int64) (*iNode, fuse.Status) {
 }
 
 func (m *MemFs) Mknod(dir int64, name string, mode int, rdev int) (
-	*fuse.EntryParam, fuse.Status) {
+	*fuse.Entry, fuse.Status) {
 
 	n, err := m.dirNode(dir)
 	if err != fuse.OK {
@@ -100,7 +103,7 @@ func (m *MemFs) Mknod(dir int64, name string, mode int, rdev int) (
 		mode:  mode | fuse.S_IFREG,
 	}
 
-	e := &fuse.EntryParam{
+	e := &fuse.Entry{
 		Ino:          i,
 		Attr:         m.stat(i),
 		AttrTimeout:  1.0,
@@ -110,7 +113,7 @@ func (m *MemFs) Mknod(dir int64, name string, mode int, rdev int) (
 }
 
 func (m *MemFs) Mkdir(dir int64, name string, mode int) (
-	*fuse.EntryParam, fuse.Status) {
+	*fuse.Entry, fuse.Status) {
 
 	n, err := m.dirNode(dir)
 	if err != fuse.OK {
@@ -137,7 +140,7 @@ func (m *MemFs) Mkdir(dir int64, name string, mode int) (
 		mode:  mode | fuse.S_IFDIR,
 	}
 
-	e := &fuse.EntryParam{
+	e := &fuse.Entry{
 		Ino:          i,
 		Attr:         m.stat(i),
 		AttrTimeout:  1.0,
@@ -205,7 +208,7 @@ func (m *MemFs) SetAttr(ino int64, attr *fuse.InoAttr, mask fuse.SetAttrMask, fi
 }
 
 func (m *MemFs) Lookup(parent int64, name string) (
-	entry *fuse.EntryParam, err fuse.Status) {
+	entry *fuse.Entry, err fuse.Status) {
 
 	n, err := m.dirNode(parent)
 	if err != fuse.OK {
@@ -217,7 +220,7 @@ func (m *MemFs) Lookup(parent int64, name string) (
 		return nil, fuse.ENOENT
 	}
 
-	e := &fuse.EntryParam{
+	e := &fuse.Entry{
 		Ino:          i,
 		Attr:         m.stat(i),
 		AttrTimeout:  1.0,
@@ -227,9 +230,12 @@ func (m *MemFs) Lookup(parent int64, name string) (
 	return e, fuse.OK
 }
 
-func (m *MemFs) StatFs(ino int64, s *fuse.StatVfs) fuse.Status {
-	s.Files = int64(len(m.inodes))
-	return fuse.OK
+func (m *MemFs) StatFs(ino int64) (stat *fuse.StatVfs, status fuse.Status) {
+	stat = &fuse.StatVfs{
+		Files: int64(len(m.inodes)),
+	}
+	status = fuse.OK
+	return
 }
 
 func (m *MemFs) ReadDir(ino int64, fi *fuse.FileInfo, off int64, size int,

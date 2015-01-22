@@ -11,9 +11,17 @@
 #include <fuse/fuse_lowlevel.h>  // IWYU pragma: export
 #endif
 
-#include <sys/types.h>           // for off_t
+#include <sys/types.h>  // for off_t
 
-int MountAndRun(int id, int argc, char *argv[]);
+// Mounts the filesystem and runs the FUSE event loop.
+// This call does not return until the filesystem is unmounted.
+// Returns an error code, or 0 on success.
+//
+// Takes ownership of the arguments, using free() to release them.
+int MountAndRun(int id, int argc, char *argv[], const struct fuse_lowlevel_ops *ops);
+
+// Standard bridge ops, which forward to Go bridge methods.
+const struct fuse_lowlevel_ops *getStandardBridgeOps();
 
 struct DirBuf {
   fuse_req_t req;
@@ -24,7 +32,6 @@ struct DirBuf {
 };
 
 // Returns 0 on success.
-int DirBufAdd(struct DirBuf *db, const char *name, fuse_ino_t ino, int mode,
-              off_t next);
+int DirBufAdd(struct DirBuf *db, const char *name, fuse_ino_t ino, int mode, off_t next);
 
 #endif  // _WRAPPER_H_

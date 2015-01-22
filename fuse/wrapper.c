@@ -8,18 +8,16 @@
 #include <fuse/fuse_opt.h>     // for fuse_opt_free_args, etc
 #endif
 
-#include <stdio.h>             // for NULL
-#include <sys/stat.h>          // for stat
-#include <sys/types.h>         // for off_t
-#include <unistd.h>            // for getgid, getuid
+#include <stdio.h>      // for NULL
+#include <sys/stat.h>   // for stat
+#include <sys/types.h>  // for off_t
+#include <unistd.h>     // for getgid, getuid
 
 #include "_cgo_export.h"  // IWYU pragma: keep
 
-// bridge ops defined in bridge.c
-extern struct fuse_lowlevel_ops bridge_ll_ops;
 static const struct stat emptyStat;
 
-int MountAndRun(int id, int argc, char *argv[]) {
+int MountAndRun(int id, int argc, char *argv[], const struct fuse_lowlevel_ops *ops) {
   struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
   struct fuse_chan *ch;
   char *mountpoint;
@@ -29,7 +27,7 @@ int MountAndRun(int id, int argc, char *argv[]) {
       (ch = fuse_mount(mountpoint, &args)) != NULL) {
     struct fuse_session *se;
 
-    se = fuse_lowlevel_new(&args, &bridge_ll_ops, sizeof(bridge_ll_ops), &id);
+    se = fuse_lowlevel_new(&args, ops, sizeof(struct fuse_lowlevel_ops), &id);
     if (se != NULL) {
       if (fuse_set_signal_handlers(se) != -1) {
         fuse_session_add_chan(se, ch);
@@ -47,8 +45,7 @@ int MountAndRun(int id, int argc, char *argv[]) {
 }
 
 // Returns 0 on success.
-int DirBufAdd(struct DirBuf *db, const char *name, fuse_ino_t ino, int mode,
-              off_t next) {
+int DirBufAdd(struct DirBuf *db, const char *name, fuse_ino_t ino, int mode, off_t next) {
   struct stat stbuf = emptyStat;
   stbuf.st_ino = ino;
   stbuf.st_mode = mode;
