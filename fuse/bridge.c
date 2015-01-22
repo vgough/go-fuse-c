@@ -306,6 +306,8 @@ void bridge_setlk(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi, str
 void bridge_bmap(fuse_req_t req, fuse_ino_t ino, size_t blocksize, uint64_t idx);
 void bridge_ioctl(fuse_req_t req, fuse_ino_t ino, int cmd, void *arg, struct fuse_file_info *fi,
                   unsigned flags, const void *in_buf, size_t in_bufsz, size_t out_bufsz);
+
+#if 0 // Not available on OSX.  Make conditional upon version & platform?
 void bridge_poll(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi,
                  struct fuse_pollhandle *ph);
 void bridge_write_buf(fuse_req_t req, fuse_ino_t ino, struct fuse_bufvec *bufv, off_t off,
@@ -313,6 +315,8 @@ void bridge_write_buf(fuse_req_t req, fuse_ino_t ino, struct fuse_bufvec *bufv, 
 void bridge_retrieve_reply(fuse_req_t req, void *cookie, fuse_ino_t ino, off_t offset,
                            struct fuse_bufvec *bufv);
 void bridge_forget_multi(fuse_req_t req, size_t count, struct fuse_forget_data *forgets);
+#endif
+
 void bridge_flock(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi, int op);
 void bridge_fallocate(fuse_req_t req, fuse_ino_t ino, int mode, off_t offset, off_t length,
                       struct fuse_file_info *fi);
