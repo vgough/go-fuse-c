@@ -3,6 +3,9 @@
 *.a
 *.so
 
+hello
+memfs
+
 # Folders
 _obj
 _test
