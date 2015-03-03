@@ -301,31 +301,43 @@ void bridge_getxattr(fuse_req_t req, fuse_ino_t ino, const char *name, size_t si
 #endif
 
   int id = *(int *)fuse_req_userdata(req);
-  if (size == 0) {
-    int err = ll_GetXattrSize(id, ino, (char *)name, &size);
-    if (err == 0) {
-      fuse_reply_xattr(req, size);
-      return;
-    } else {
-      fuse_reply_err(req, err);
-    }
-  } else {
-    char *buf = malloc(size);
-    if (!buf) {
-      fuse_reply_err(req, EINTR);
-    }
-    int err = ll_GetXattr(id, ino, (char *)name, buf, &size);
-    if (err == 0) {
-      fuse_reply_buf(req, buf, size);
-    } else {
-      fuse_reply_err(req, err);
-    }
+  char *buf = (size > 0) ? malloc(size) : 0;
+  int err = ll_GetXattr(id, ino, (char *)name, buf, &size);
+  if (err != 0) {
+    fuse_reply_err(req, err);
+    return;
+  }
+
+  if (buf != NULL) {
+    fuse_reply_buf(req, buf, size);
     free(buf);
+  } else {
+    fuse_reply_xattr(req, size);
   }
 }
 
-void bridge_listxattr(fuse_req_t req, fuse_ino_t ino, size_t size);
-void bridge_removexattr(fuse_req_t req, fuse_ino_t ino, const char *name);
+void bridge_listxattr(fuse_req_t req, fuse_ino_t ino, size_t size) {
+  int id = *(int *)fuse_req_userdata(req);
+  char *buf = (size > 0) ? malloc(size) : 0;
+  int err = ll_ListXattr(id, ino, buf, &size);
+  if (err != 0) {
+    fuse_reply_err(req, err);
+    return;
+  }
+
+  if (buf != NULL) {
+    fuse_reply_buf(req, buf, size);
+    free(buf);
+  } else {
+    fuse_reply_xattr(req, size);
+  }
+}
+
+void bridge_removexattr(fuse_req_t req, fuse_ino_t ino, const char *name) {
+  int id = *(int *)fuse_req_userdata(req);
+  int err = ll_RemoveXattr(id, ino, (char *)name);
+  fuse_reply_err(req, err);
+}
 
 void bridge_access(fuse_req_t req, fuse_ino_t ino, int mask) {
   int id = *(int *)fuse_req_userdata(req);
@@ -394,9 +406,9 @@ static struct fuse_lowlevel_ops bridge_ll_ops = {.init = bridge_init,
                                                  .fsyncdir = bridge_fsyncdir,
                                                  .statfs = bridge_statfs,
                                                  .setxattr = bridge_setxattr,
-                                                 //.getxattr
-                                                 //.listxattr
-                                                 //.removexattr
+                                                 .getxattr = bridge_getxattr,
+                                                 .listxattr = bridge_listxattr,
+                                                 .removexattr = bridge_removexattr,
                                                  .access = bridge_access,
                                                  .create = bridge_create,
                                                  //.getlk

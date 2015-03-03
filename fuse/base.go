@@ -117,6 +117,10 @@ func (d *DefaultRawFileSystem) Unlink(p int64, name string) Status {
 	return ENOSYS
 }
 
+func (d *DefaultRawFileSystem) ListXattrs(ino int64) ([]string, Status) {
+	return nil, ENOSYS
+}
+
 func (d *DefaultRawFileSystem) GetXattrSize(ino int64, name string) (int, Status) {
 	return 0, ENOSYS
 }
@@ -126,5 +130,9 @@ func (d *DefaultRawFileSystem) GetXattr(ino int64, name string, out []byte) (int
 }
 
 func (d *DefaultRawFileSystem) SetXattr(ino int64, name string, value []byte, flags int) Status {
+	return ENOSYS
+}
+
+func (d *DefaultRawFileSystem) RemoveXattr(ino int64, name string) Status {
 	return ENOSYS
 }

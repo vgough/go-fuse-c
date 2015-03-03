@@ -172,6 +172,9 @@ type RawFileSystem interface {
 	// If this method is not implemented, then Mknod and Open methods will be called instead.
 	Create(parent int64, name string, mode int, fi *FileInfo) (*Entry, Status)
 
+	// Returns a list of the extended attribute keys.
+	ListXattrs(ino int64) ([]string, Status)
+
 	// Returns the size of the attribute value.
 	GetXattrSize(ino int64, name string) (int, Status)
 
@@ -182,6 +185,9 @@ type RawFileSystem interface {
 
 	// Set an extended attribute.
 	SetXattr(ino int64, name string, value []byte, flags int) Status
+
+	// Remove an extended attribute.
+	RemoveXattr(ino int64, name string) Status
 }
 
 type StatVfs struct {

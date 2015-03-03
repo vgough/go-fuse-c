@@ -90,23 +90,19 @@ func ll_SetXattr(id C.int, ino C.fuse_ino_t, name *C.char, value unsafe.Pointer,
 	return C.int(err)
 }
 
-//export ll_GetXattrSize
-func ll_GetXattrSize(id C.int, ino C.fuse_ino_t, name *C.char, size *C.size_t) C.int {
-	fs := GetRawFs(int(id))
-	sz, err := fs.GetXattrSize(int64(ino), C.GoString(name))
-	if err == OK {
-		*size = C.size_t(sz)
-	}
-	return C.int(err)
-}
-
 //export ll_GetXattr
 func ll_GetXattr(id C.int, ino C.fuse_ino_t, name *C.char, buf unsafe.Pointer,
 	size *C.size_t) C.int {
 
 	fs := GetRawFs(int(id))
-	out := zeroCopyBuf(buf, int(*size))
-	outSize, err := fs.GetXattr(int64(ino), C.GoString(name), out)
+	var err Status
+	var outSize int
+	if *size == 0 {
+		outSize, err = fs.GetXattrSize(int64(ino), C.GoString(name))
+	} else {
+		out := zeroCopyBuf(buf, int(*size))
+		outSize, err = fs.GetXattr(int64(ino), C.GoString(name), out)
+	}
 	if err == OK {
 		*size = C.size_t(outSize)
 	}
@@ -263,6 +259,42 @@ func ll_Mknod(id C.int, dir C.fuse_ino_t, name *C.char, mode C.mode_t,
 	if err == OK {
 		ent.toCEntry(cent)
 	}
+	return C.int(err)
+}
+
+//export ll_ListXattr
+func ll_ListXattr(id C.int, ino C.fuse_ino_t, buf unsafe.Pointer, size *C.size_t) C.int {
+	out := zeroCopyBuf(buf, int(*size))
+	fs := GetRawFs(int(id))
+	keys, err := fs.ListXattrs(int64(ino))
+	if err != OK {
+		return C.int(err)
+	}
+
+	ok := true
+	var pos int = 0
+	for _, k := range keys {
+		totalLen := pos + len(k) + 1
+		if ok && totalLen < int(*size) {
+			copy(out[pos:totalLen], k)
+			out[totalLen] = 0
+			pos = totalLen
+		} else {
+			ok = false
+		}
+	}
+
+	*size = C.size_t(pos)
+	if !ok {
+		err = ERANGE
+	}
+	return C.int(err)
+}
+
+//export ll_RemoveXattr
+func ll_RemoveXattr(id C.int, ino C.fuse_ino_t, name *C.char) C.int {
+	fs := GetRawFs(int(id))
+	err := fs.RemoveXattr(int64(ino), C.GoString(name))
 	return C.int(err)
 }
 
