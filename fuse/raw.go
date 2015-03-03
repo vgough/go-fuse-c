@@ -171,6 +171,17 @@ type RawFileSystem interface {
 	//
 	// If this method is not implemented, then Mknod and Open methods will be called instead.
 	Create(parent int64, name string, mode int, fi *FileInfo) (*Entry, Status)
+
+	// Returns the size of the attribute value.
+	GetXattrSize(ino int64, name string) (int, Status)
+
+	// Get an extended attribute.
+	// Result placed in out buffer.
+	// Returns the number of bytes copied.
+	GetXattr(ino int64, name string, out []byte) (int, Status)
+
+	// Set an extended attribute.
+	SetXattr(ino int64, name string, value []byte, flags int) Status
 }
 
 type StatVfs struct {

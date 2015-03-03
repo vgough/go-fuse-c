@@ -46,6 +46,17 @@ func Version() int {
 	return int(C.fuse_version())
 }
 
+// zeroCopyBuf creates a byte array backed by a C buffer.
+func zeroCopyBuf(buf unsafe.Pointer, size int) []byte {
+	// Create slice backed by C buffer.
+	hdr := reflect.SliceHeader{
+		Data: uintptr(buf),
+		Len:  int(size),
+		Cap:  int(size),
+	}
+	return *(*[]byte)(unsafe.Pointer(&hdr))
+}
+
 //export ll_Init
 func ll_Init(id C.int, cinfo *C.struct_fuse_conn_info) {
 	fs := GetRawFs(int(id))
@@ -65,6 +76,39 @@ func ll_StatFs(id C.int, ino C.fuse_ino_t, stat *C.struct_statvfs) C.int {
 	s, err := fs.StatFs(int64(ino))
 	if err == OK {
 		s.toCStat(stat)
+	}
+	return C.int(err)
+}
+
+//export ll_SetXattr
+func ll_SetXattr(id C.int, ino C.fuse_ino_t, name *C.char, value unsafe.Pointer,
+	size C.size_t, flags C.int) C.int {
+
+	fs := GetRawFs(int(id))
+	data := zeroCopyBuf(value, int(size))
+	err := fs.SetXattr(int64(ino), C.GoString(name), data, int(flags))
+	return C.int(err)
+}
+
+//export ll_GetXattrSize
+func ll_GetXattrSize(id C.int, ino C.fuse_ino_t, name *C.char, size *C.size_t) C.int {
+	fs := GetRawFs(int(id))
+	sz, err := fs.GetXattrSize(int64(ino), C.GoString(name))
+	if err == OK {
+		*size = C.size_t(sz)
+	}
+	return C.int(err)
+}
+
+//export ll_GetXattr
+func ll_GetXattr(id C.int, ino C.fuse_ino_t, name *C.char, buf unsafe.Pointer,
+	size *C.size_t) C.int {
+
+	fs := GetRawFs(int(id))
+	out := zeroCopyBuf(buf, int(*size))
+	outSize, err := fs.GetXattr(int64(ino), C.GoString(name), out)
+	if err == OK {
+		*size = C.size_t(outSize)
 	}
 	return C.int(err)
 }
@@ -189,12 +233,7 @@ func ll_Read(id C.int, ino C.fuse_ino_t, off C.off_t,
 	fs := GetRawFs(int(id))
 
 	// Create slice backed by C buffer.
-	hdr := reflect.SliceHeader{
-		Data: uintptr(buf),
-		Len:  int(*size),
-		Cap:  int(*size),
-	}
-	out := *(*[]byte)(unsafe.Pointer(&hdr))
+	out := zeroCopyBuf(buf, int(*size))
 	n, err := fs.Read(out, int64(ino), int64(off), newFileInfo(fi))
 	if err == OK {
 		*size = C.int(n)
@@ -207,13 +246,7 @@ func ll_Write(id C.int, ino C.fuse_ino_t, buf unsafe.Pointer, n *C.size_t, off C
 	fi *C.struct_fuse_file_info) C.int {
 
 	fs := GetRawFs(int(id))
-	// Create slice backed by C buffer.
-	hdr := reflect.SliceHeader{
-		Data: uintptr(buf),
-		Len:  int(*n),
-		Cap:  int(*n),
-	}
-	in := *(*[]byte)(unsafe.Pointer(&hdr))
+	in := zeroCopyBuf(buf, int(*n))
 	written, err := fs.Write(in, int64(ino), int64(off), newFileInfo(fi))
 	if err == OK {
 		*n = C.size_t(written)

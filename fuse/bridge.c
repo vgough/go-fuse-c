@@ -274,9 +274,56 @@ void bridge_statfs(fuse_req_t req, fuse_ino_t ino) {
   }
 }
 
+#ifdef __APPLE__
 void bridge_setxattr(fuse_req_t req, fuse_ino_t ino, const char *name, const char *value,
-                     size_t size, int flags);
-void bridge_getxattr(fuse_req_t req, fuse_ino_t ino, const char *name, size_t size);
+                     size_t size, int flags, uint32_t position) {
+  if (position != 0) {
+    fuse_reply_err(req, EPERM);
+  }
+#else
+void bridge_setxattr(fuse_req_t req, fuse_ino_t ino, const char *name, const char *value,
+                     size_t size, int flags) {
+#endif
+
+  int id = *(int *)fuse_req_userdata(req);
+  int err = ll_SetXattr(id, ino, (char *)name, (char *)value, size, flags);
+  fuse_reply_err(req, err);
+}
+
+#ifdef __APPLE__
+void bridge_getxattr(fuse_req_t req, fuse_ino_t ino, const char *name, size_t size,
+    uint32_t position) {
+  if (position != 0) {
+    fuse_reply_err(req, EPERM);
+  }
+#else
+void bridge_getxattr(fuse_req_t req, fuse_ino_t ino, const char *name, size_t size) {
+#endif
+
+  int id = *(int *)fuse_req_userdata(req);
+  if (size == 0) {
+    int err = ll_GetXattrSize(id, ino, (char *)name, &size);
+    if (err == 0) {
+      fuse_reply_xattr(req, size);
+      return;
+    } else {
+      fuse_reply_err(req, err);
+    }
+  } else {
+    char *buf = malloc(size);
+    if (!buf) {
+      fuse_reply_err(req, EINTR);
+    }
+    int err = ll_GetXattr(id, ino, (char *)name, buf, &size);
+    if (err == 0) {
+      fuse_reply_buf(req, buf, size);
+    } else {
+      fuse_reply_err(req, err);
+    }
+    free(buf);
+  }
+}
+
 void bridge_listxattr(fuse_req_t req, fuse_ino_t ino, size_t size);
 void bridge_removexattr(fuse_req_t req, fuse_ino_t ino, const char *name);
 
@@ -346,7 +393,7 @@ static struct fuse_lowlevel_ops bridge_ll_ops = {.init = bridge_init,
                                                  .releasedir = bridge_releasedir,
                                                  .fsyncdir = bridge_fsyncdir,
                                                  .statfs = bridge_statfs,
-                                                 //.setxattr
+                                                 .setxattr = bridge_setxattr,
                                                  //.getxattr
                                                  //.listxattr
                                                  //.removexattr

@@ -116,3 +116,15 @@ func (d *DefaultRawFileSystem) Rename(int64, string, int64, string) Status {
 func (d *DefaultRawFileSystem) Unlink(p int64, name string) Status {
 	return ENOSYS
 }
+
+func (d *DefaultRawFileSystem) GetXattrSize(ino int64, name string) (int, Status) {
+	return 0, ENOSYS
+}
+
+func (d *DefaultRawFileSystem) GetXattr(ino int64, name string, out []byte) (int, Status) {
+	return 0, ENOSYS
+}
+
+func (d *DefaultRawFileSystem) SetXattr(ino int64, name string, value []byte, flags int) Status {
+	return ENOSYS
+}
