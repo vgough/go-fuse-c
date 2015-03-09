@@ -1,6 +1,8 @@
 go-fuse-c
 =========
 
+[![Build Status](https://travis-ci.org/vgough/go-fuse-c.svg)](https://travis-ci.org/vgough/go-fuse-c)
+
 CGO wrapper for FUSE C low-level API.
 
 # Examples
