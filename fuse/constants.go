@@ -19,23 +19,23 @@ type Status int32
 
 const (
 	OK        = Status(0)
-	EACCES    = Status(syscall.EACCES)
-	EBUSY     = Status(syscall.EBUSY)
-	EEXIST    = Status(syscall.EEXIST)
-	EINVAL    = Status(syscall.EINVAL)
-	EIO       = Status(syscall.EIO)
-	ENOENT    = Status(syscall.ENOENT)
-	ENOSYS    = Status(syscall.ENOSYS)
-	ENODATA   = Status(syscall.ENODATA)
-	ENOTDIR   = Status(syscall.ENOTDIR)
-	ENOTEMPTY = Status(syscall.ENOTEMPTY)
-	EPERM     = Status(syscall.EPERM)
-	ERANGE    = Status(syscall.ERANGE)
-	EXDEV     = Status(syscall.EXDEV)
-	EBADF     = Status(syscall.EBADF)
-	ENODEV    = Status(syscall.ENODEV)
-	EROFS     = Status(syscall.EROFS)
-	EISDIR    = Status(syscall.EISDIR)
+	EACCES    = Status(syscall.EACCES)    // 13 - permission denied
+	EBUSY     = Status(syscall.EBUSY)     // 16 - resource busy
+	EEXIST    = Status(syscall.EEXIST)    // 17 - node exists
+	EINVAL    = Status(syscall.EINVAL)    // 22 - invalid argument
+	EIO       = Status(syscall.EIO)       // 5 - input / output error
+	ENOENT    = Status(syscall.ENOENT)    // 2 - no such entry
+	ENOSYS    = Status(syscall.ENOSYS)    // 78 - operation not implemented
+	ENODATA   = Status(syscall.ENODATA)   // 96 - no data available
+	ENOTDIR   = Status(syscall.ENOTDIR)   // 20 - not a directory
+	ENOTEMPTY = Status(syscall.ENOTEMPTY) // 39 - directory not empty
+	EPERM     = Status(syscall.EPERM)     // 1 - operation not permitted
+	ERANGE    = Status(syscall.ERANGE)    // 34 - result not representable
+	EXDEV     = Status(syscall.EXDEV)     // 18 - cross-device link
+	EBADF     = Status(syscall.EBADF)     // 9 - bad file number
+	ENODEV    = Status(syscall.ENODEV)    // 19 - no such device
+	EROFS     = Status(syscall.EROFS)     // 30 - read-only file system
+	EISDIR    = Status(syscall.EISDIR)    // 21 - is a directory
 )
 
 type AccessMode int32
