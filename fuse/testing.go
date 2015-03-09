@@ -51,6 +51,12 @@ func BridgeLookup(fsId int, ino int64, name string, handler ReplyHandler) {
 	C.bridge_lookup(req, C.fuse_ino_t(ino), cstr)
 }
 
+func BridgeForget(fsId int, ino int64, n int64, handler ReplyHandler) {
+	req := NewReq(handler, fsId)
+	defer FreeReq(req)
+	C.bridge_forget(req, C.fuse_ino_t(ino), C.ulong(n))
+}
+
 //export ll_Reply_Err
 func ll_Reply_Err(req C.int, err C.int) C.int {
 	h := GetHandler(req)

@@ -71,3 +71,16 @@ func TestLookup(t *testing.T) {
 		})
 	})
 }
+
+func TestForget(t *testing.T) {
+	fs := NewMemFs()
+	fsId := RegisterRawFs(fs)
+	defer DeregisterRawFs(fsId)
+
+	Convey("Forget uses reply_none", t, func() {
+		BridgeForget(fsId, 100, 1, func(id int, r interface{}) int {
+			So(r, ShouldHaveSameTypeAs, &ReplyNone{})
+			return int(OK)
+		})
+	})
+}
