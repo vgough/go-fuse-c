@@ -25,7 +25,7 @@ func TestLookup(t *testing.T) {
 				So(r.err, ShouldEqual, ENOENT)
 
 			default:
-				t.Errorf("Unexpected reply: %v", r)
+				t.Errorf("Unexpected reply: %#v", r)
 			}
 			return int(OK)
 		})
@@ -38,7 +38,7 @@ func TestLookup(t *testing.T) {
 				So(r.err, ShouldEqual, ENOENT)
 
 			default:
-				t.Errorf("Unexpected reply: %v", r)
+				t.Errorf("Unexpected reply: %#v", r)
 			}
 			return int(OK)
 		})
@@ -46,13 +46,7 @@ func TestLookup(t *testing.T) {
 
 	Convey("Lookup valid file", t, func() {
 		BridgeLookup(fsId, 1, "exists", func(id int, r interface{}) int {
-			switch r := r.(type) {
-			case *ReplyErr:
-				So(r.err, ShouldEqual, OK)
-
-			default:
-				t.Errorf("Unexpected reply: %v", r)
-			}
+			So(r, ShouldHaveSameTypeAs, &ReplyEntry{})
 			return int(OK)
 		})
 	})
@@ -65,7 +59,7 @@ func TestLookup(t *testing.T) {
 				So(r.err, ShouldEqual, ENOTDIR)
 
 			default:
-				t.Errorf("Unexpected reply: %v", r)
+				t.Errorf("Unexpected reply: %#v", r)
 			}
 			return int(OK)
 		})

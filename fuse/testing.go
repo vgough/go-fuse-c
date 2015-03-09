@@ -15,6 +15,9 @@ type ReplyErr struct {
 	err Status
 }
 type ReplyNone struct{}
+type ReplyEntry struct {
+	e *C.struct_fuse_entry_param
+}
 
 var reqLoc sync.RWMutex
 var reqMap map[int]ReplyHandler = make(map[int]ReplyHandler)
@@ -72,7 +75,9 @@ func ll_Reply_None(req C.int) {
 
 //export ll_Reply_Entry
 func ll_Reply_Entry(req C.int, e *C.struct_fuse_entry_param) C.int {
-	return C.int(OK)
+	h := GetHandler(req)
+	r := h(int(req), &ReplyEntry{e})
+	return C.int(r)
 }
 
 //export ll_Reply_Create
