@@ -60,8 +60,20 @@ func zeroCopyBuf(buf unsafe.Pointer, size int) []byte {
 //export ll_Init
 func ll_Init(id C.int, cinfo *C.struct_fuse_conn_info) {
 	fs := GetRawFs(int(id))
-	info := &ConnInfo{}
+	info := &ConnInfo{
+		ProtoMajor:   int(cinfo.proto_major),
+		ProtoMinor:   int(cinfo.proto_minor),
+		MaxWrite:     int(cinfo.max_write),
+		MaxReadahead: int(cinfo.max_readahead),
+	}
 	fs.Init(info)
+
+	// Copy writable options back to cinfo
+	cinfo.max_write = C.uint(info.MaxWrite)
+	cinfo.max_readahead = C.uint(info.MaxReadahead)
+
+	// TODO: async_read
+	// TODO: APPLE specific flag support.
 }
 
 //export ll_Destroy

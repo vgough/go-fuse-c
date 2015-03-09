@@ -228,7 +228,17 @@ func (f *FileInfo) AccessMode() AccessMode {
 }
 
 type ConnInfo struct {
-	// TODO
+	// Major version of the protocol.
+	ProtoMajor int
+
+	// Minor version of the protocol.
+	ProtoMinor int
+
+	// Maximum size of the write buffer (writable).
+	MaxWrite int
+
+	// Maximum readahead
+	MaxReadahead int
 }
 
 type Entry struct {

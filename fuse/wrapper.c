@@ -43,22 +43,3 @@ int MountAndRun(int id, int argc, char *argv[], const struct fuse_lowlevel_ops *
 
   return err ? 1 : 0;
 }
-
-// Returns 0 on success.
-int DirBufAdd(struct DirBuf *db, const char *name, fuse_ino_t ino, int mode, off_t next) {
-  struct stat stbuf = emptyStat;
-  stbuf.st_ino = ino;
-  stbuf.st_mode = mode;
-  stbuf.st_uid = getuid();
-  stbuf.st_gid = getgid();
-
-  char *buf = db->buf + db->offset;
-  size_t left = db->size - db->offset;
-  size_t size = fuse_add_direntry(db->req, buf, left, name, &stbuf, next);
-  if (size < left) {
-    db->offset += size;
-    return 0;
-  }
-
-  return 1;
-}
