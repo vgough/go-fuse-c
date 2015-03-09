@@ -83,46 +83,55 @@ func ll_Reply_Entry(req C.int, e *C.struct_fuse_entry_param) C.int {
 //export ll_Reply_Create
 func ll_Reply_Create(req C.int, e *C.struct_fuse_entry_param,
 	fi *C.struct_fuse_file_info) C.int {
+	// TODO
 	return C.int(OK)
 }
 
 //export ll_Reply_Attr
 func ll_Reply_Attr(req C.int, attr *C.struct_stat, timeout C.double) C.int {
+	// TODO
 	return C.int(OK)
 }
 
 //export ll_Reply_Readlink
 func ll_Reply_Readlink(req C.int, link *C.char) C.int {
+	// TODO
 	return C.int(OK)
 }
 
 //export ll_Reply_Open
 func ll_Reply_Open(req C.int, fi *C.struct_fuse_file_info) C.int {
+	// TODO
 	return C.int(OK)
 }
 
 //export ll_Reply_Write
 func ll_Reply_Write(req C.int, count C.size_t) C.int {
+	// TODO
 	return C.int(OK)
 }
 
 //export ll_Reply_Buf
 func ll_Reply_Buf(req C.int, buf *C.char, size C.size_t) C.int {
+	// TODO
 	return C.int(OK)
 }
 
 //export ll_Reply_Statfs
 func ll_Reply_Statfs(req C.int, stbuf *C.struct_statvfs) C.int {
+	// TODO
 	return C.int(OK)
 }
 
 //export ll_Reply_Xattr
 func ll_Reply_Xattr(req C.int, size C.size_t) C.int {
+	// TODO
 	return C.int(OK)
 }
 
 //export ll_Add_Direntry
 func ll_Add_Direntry(req C.int, buf *C.char, size C.size_t,
 	name *C.char, stbuf *C.struct_stat, off C.off_t) C.int {
+	// TODO
 	return C.int(OK)
 }
