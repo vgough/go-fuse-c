@@ -33,7 +33,7 @@ fuse_req_t new_fuse_test_req(int id, int userdata) {
   req->magic = MAGIC_NUM;
   req->req_id = id;
   req->userdata = userdata;
-  return (fuse_req_t) req;
+  return (fuse_req_t)req;
 }
 
 void free_fuse_test_req(fuse_req_t req) {
@@ -50,12 +50,8 @@ int fuse_test_req_id(fuse_req_t req) {
 
 // Test wrappers which handle const conversion since the exported Go functions
 // can't be marked as having const parameters.
-int test_ll_Reply_Err(fuse_req_t req, int err) {
-  return ll_Reply_Err(fuse_test_req_id(req), err);
-}
-void test_ll_Reply_None(fuse_req_t req) {
-  ll_Reply_None(fuse_test_req_id(req));
-}
+int test_ll_Reply_Err(fuse_req_t req, int err) { return ll_Reply_Err(fuse_test_req_id(req), err); }
+void test_ll_Reply_None(fuse_req_t req) { ll_Reply_None(fuse_test_req_id(req)); }
 int test_ll_Reply_Entry(fuse_req_t req, const struct fuse_entry_param *e) {
   return ll_Reply_Entry(fuse_test_req_id(req), (struct fuse_entry_param *)e);
 }
@@ -64,8 +60,7 @@ int test_ll_Reply_Create(fuse_req_t req, const struct fuse_entry_param *e,
   return ll_Reply_Create(fuse_test_req_id(req), (struct fuse_entry_param *)e,
                          (struct fuse_file_info *)fi);
 }
-int test_ll_Reply_Attr(fuse_req_t req, const struct stat *attr,
-                     double attr_timeout) {
+int test_ll_Reply_Attr(fuse_req_t req, const struct stat *attr, double attr_timeout) {
   return ll_Reply_Attr(fuse_test_req_id(req), (struct stat *)attr, attr_timeout);
 }
 int test_ll_Reply_Readlink(fuse_req_t req, const char *link) {
@@ -86,10 +81,10 @@ int test_ll_Reply_Statfs(fuse_req_t req, const struct statvfs *stbuf) {
 int test_ll_Reply_Xattr(fuse_req_t req, size_t count) {
   return ll_Reply_Xattr(fuse_test_req_id(req), count);
 }
-size_t test_ll_Add_Direntry(fuse_req_t req, char *buf, size_t bufsize,
-       const char *name, const struct stat *stbuf, off_t off) {
-  return ll_Add_Direntry(fuse_test_req_id(req), buf, bufsize, (char *)name,
-                         (struct stat *)stbuf, off);
+size_t test_ll_Add_Direntry(fuse_req_t req, char *buf, size_t bufsize, const char *name,
+                            const struct stat *stbuf, off_t off) {
+  return ll_Add_Direntry(fuse_test_req_id(req), buf, bufsize, (char *)name, (struct stat *)stbuf,
+                         off);
 }
 void *test_ll_Req_Userdata(fuse_req_t req) {
   struct test_fuse_req *r = (struct test_fuse_req *)req;
@@ -103,20 +98,20 @@ void *test_ll_Req_Userdata(fuse_req_t req) {
 // counterparts.
 static int (*ll_reply_err)(fuse_req_t req, int err) = test_ll_Reply_Err;
 static void (*ll_reply_none)(fuse_req_t req) = test_ll_Reply_None;
-static int (*ll_reply_entry)(fuse_req_t req, const struct fuse_entry_param *e) =
-    test_ll_Reply_Entry;
+static int (*ll_reply_entry)(fuse_req_t req,
+                             const struct fuse_entry_param *e) = test_ll_Reply_Entry;
 static int (*ll_reply_create)(fuse_req_t req, const struct fuse_entry_param *e,
-                       const struct fuse_file_info *fi) = test_ll_Reply_Create;
+                              const struct fuse_file_info *fi) = test_ll_Reply_Create;
 static int (*ll_reply_attr)(fuse_req_t req, const struct stat *attr,
-                     double attr_timeout) = test_ll_Reply_Attr;
+                            double attr_timeout) = test_ll_Reply_Attr;
 static int (*ll_reply_readlink)(fuse_req_t req, const char *link) = test_ll_Reply_Readlink;
 static int (*ll_reply_open)(fuse_req_t req, const struct fuse_file_info *fi) = test_ll_Reply_Open;
 static int (*ll_reply_write)(fuse_req_t req, size_t count) = test_ll_Reply_Write;
 static int (*ll_reply_buf)(fuse_req_t req, const char *buf, size_t size) = test_ll_Reply_Buf;
 static int (*ll_reply_statfs)(fuse_req_t req, const struct statvfs *stbuf) = test_ll_Reply_Statfs;
 static int (*ll_reply_xattr)(fuse_req_t req, size_t count) = test_ll_Reply_Xattr;
-static size_t (*ll_add_direntry)(fuse_req_t req, char *buf, size_t bufsize,
-       const char *name, const struct stat *stbuf, off_t off) = test_ll_Add_Direntry;
+static size_t (*ll_add_direntry)(fuse_req_t req, char *buf, size_t bufsize, const char *name,
+                                 const struct stat *stbuf, off_t off) = test_ll_Add_Direntry;
 static void *(*ll_req_userdata)(fuse_req_t req) = test_ll_Req_Userdata;
 static const struct fuse_ctx *(*ll_req_ctx)(fuse_req_t req);
 
@@ -427,7 +422,7 @@ void bridge_setxattr(fuse_req_t req, fuse_ino_t ino, const char *name, const cha
 
 #ifdef __APPLE__
 void bridge_getxattr(fuse_req_t req, fuse_ino_t ino, const char *name, size_t size,
-    uint32_t position) {
+                     uint32_t position) {
   if (position != 0) {
     ll_reply_err(req, EPERM);
   }
@@ -501,7 +496,7 @@ void bridge_bmap(fuse_req_t req, fuse_ino_t ino, size_t blocksize, uint64_t idx)
 void bridge_ioctl(fuse_req_t req, fuse_ino_t ino, int cmd, void *arg, struct fuse_file_info *fi,
                   unsigned flags, const void *in_buf, size_t in_bufsz, size_t out_bufsz);
 
-#if 0 // Not available on OSX.  Make conditional upon version & platform?
+#if 0  // Not available on OSX.  Make conditional upon version & platform?
 void bridge_poll(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi,
                  struct fuse_pollhandle *ph);
 void bridge_write_buf(fuse_req_t req, fuse_ino_t ino, struct fuse_bufvec *bufv, off_t off,
@@ -515,47 +510,48 @@ void bridge_flock(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi, int
 void bridge_fallocate(fuse_req_t req, fuse_ino_t ino, int mode, off_t offset, off_t length,
                       struct fuse_file_info *fi);
 
-static struct fuse_lowlevel_ops bridge_ll_ops = {.init = bridge_init,
-                                                 .destroy = bridge_destroy,
-                                                 .lookup = bridge_lookup,
-                                                 .forget = bridge_forget,
-                                                 .getattr = bridge_getattr,
-                                                 .setattr = bridge_setattr,
-                                                 .readlink = bridge_readlink,
-                                                 .mknod = bridge_mknod,
-                                                 .mkdir = bridge_mkdir,
-                                                 .unlink = bridge_unlink,
-                                                 .rmdir = bridge_rmdir,
-                                                 .symlink = bridge_symlink,
-                                                 .rename = bridge_rename,
-                                                 .link = bridge_link,
-                                                 .open = bridge_open,
-                                                 .read = bridge_read,
-                                                 .write = bridge_write,
-                                                 .flush = bridge_flush,
-                                                 .release = bridge_release,
-                                                 .fsync = bridge_fsync,
-                                                 .opendir = bridge_opendir,
-                                                 .readdir = bridge_readdir,
-                                                 .releasedir = bridge_releasedir,
-                                                 .fsyncdir = bridge_fsyncdir,
-                                                 .statfs = bridge_statfs,
-                                                 .setxattr = bridge_setxattr,
-                                                 .getxattr = bridge_getxattr,
-                                                 .listxattr = bridge_listxattr,
-                                                 .removexattr = bridge_removexattr,
-                                                 .access = bridge_access,
-                                                 .create = bridge_create,
-                                                 //.getlk
-                                                 //.setlk
-                                                 //.bmap
-                                                 //.ioctl
-                                                 //.poll
-                                                 //.write_buf
-                                                 //.retrieve_reply
-                                                 //.forget_multi
-                                                 //.flock
-                                                 //.fallocate
+static struct fuse_lowlevel_ops bridge_ll_ops = {
+    .init = bridge_init,
+    .destroy = bridge_destroy,
+    .lookup = bridge_lookup,
+    .forget = bridge_forget,
+    .getattr = bridge_getattr,
+    .setattr = bridge_setattr,
+    .readlink = bridge_readlink,
+    .mknod = bridge_mknod,
+    .mkdir = bridge_mkdir,
+    .unlink = bridge_unlink,
+    .rmdir = bridge_rmdir,
+    .symlink = bridge_symlink,
+    .rename = bridge_rename,
+    .link = bridge_link,
+    .open = bridge_open,
+    .read = bridge_read,
+    .write = bridge_write,
+    .flush = bridge_flush,
+    .release = bridge_release,
+    .fsync = bridge_fsync,
+    .opendir = bridge_opendir,
+    .readdir = bridge_readdir,
+    .releasedir = bridge_releasedir,
+    .fsyncdir = bridge_fsyncdir,
+    .statfs = bridge_statfs,
+    .setxattr = bridge_setxattr,
+    .getxattr = bridge_getxattr,
+    .listxattr = bridge_listxattr,
+    .removexattr = bridge_removexattr,
+    .access = bridge_access,
+    .create = bridge_create,
+    //.getlk
+    //.setlk
+    //.bmap
+    //.ioctl
+    //.poll
+    //.write_buf
+    //.retrieve_reply
+    //.forget_multi
+    //.flock
+    //.fallocate
 };
 
 const struct fuse_lowlevel_ops *getStandardBridgeOps() { return &bridge_ll_ops; }

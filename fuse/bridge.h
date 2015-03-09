@@ -27,8 +27,7 @@ void bridge_rename(fuse_req_t req, fuse_ino_t parent, const char *name, fuse_ino
                    const char *newname);
 void bridge_link(fuse_req_t req, fuse_ino_t ino, fuse_ino_t newparent, const char *newname);
 void bridge_open(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi);
-void bridge_read(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
-                 struct fuse_file_info *fi);
+void bridge_read(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off, struct fuse_file_info *fi);
 void bridge_write(fuse_req_t req, fuse_ino_t ino, const char *buf, size_t size, off_t off,
                   struct fuse_file_info *fi);
 void bridge_flush(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi);
@@ -45,7 +44,7 @@ void bridge_statfs(fuse_req_t req, fuse_ino_t ino);
 void bridge_setxattr(fuse_req_t req, fuse_ino_t ino, const char *name, const char *value,
                      size_t size, int flags, uint32_t position);
 void bridge_getxattr(fuse_req_t req, fuse_ino_t ino, const char *name, size_t size,
-    uint32_t position);
+                     uint32_t position);
 #else
 void bridge_setxattr(fuse_req_t req, fuse_ino_t ino, const char *name, const char *value,
                      size_t size, int flags);
