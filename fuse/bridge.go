@@ -3,6 +3,7 @@ package fuse
 import (
 	"reflect"
 	"sync"
+	"time"
 	"unsafe"
 )
 
@@ -429,4 +430,9 @@ func (e *Entry) toCEntry(o *C.struct_fuse_entry_param) {
 	e.Attr.toCStat(&o.attr, nil)
 	o.attr_timeout = C.double(e.AttrTimeout)
 	o.entry_timeout = C.double(e.EntryTimeout)
+}
+
+// Use C wrapper function to avoid issues with different typedef names on different systems.
+func toCTime(o *C.struct_timespec, i time.Time) {
+	C.fill_timespec(o, C.time_t(i.Unix()), C.ulong(i.Nanosecond()))
 }

@@ -34,4 +34,8 @@ struct DirBuf {
 // Returns 0 on success.
 int DirBufAdd(struct DirBuf *db, const char *name, fuse_ino_t ino, int mode, off_t next);
 
+// Helpers to copy time values into timespec.
+// This avoids typedef related issues.
+void fill_timespec(struct timespec *out, time_t sec, unsigned long nsec);
+
 #endif  // _WRAPPER_H_

@@ -53,8 +53,3 @@ func (a *InoAttr) toCStat(o *C.struct_stat, timeout *C.double) {
 		(*timeout) = C.double(a.Timeout)
 	}
 }
-
-func toCTime(o *C.struct_timespec, i time.Time) {
-	o.tv_sec = C.__darwin_time_t(i.Unix())
-	o.tv_nsec = C.long(i.Nanosecond())
-}

@@ -43,3 +43,8 @@ int MountAndRun(int id, int argc, char *argv[], const struct fuse_lowlevel_ops *
 
   return err ? 1 : 0;
 }
+
+void fill_timespec(struct timespec *out, time_t sec, unsigned long nsec) {
+  out->tv_sec = sec;
+  out->tv_nsec = nsec;
+}
