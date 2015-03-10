@@ -108,3 +108,16 @@ func TestGetAttr(t *testing.T) {
 		})
 	})
 }
+
+func TestStatFs(t *testing.T) {
+	fs := NewMemFs()
+	fsId := RegisterRawFs(fs)
+	defer DeregisterRawFs(fsId)
+
+	Convey("StatFs on undefined inode", t, func() {
+		BridgeStatFs(fsId, 0, func(id int, r interface{}) int {
+			So(r, ShouldHaveSameTypeAs, &ReplyStatFs{})
+			return int(OK)
+		})
+	})
+}

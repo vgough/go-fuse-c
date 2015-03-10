@@ -22,6 +22,9 @@ type ReplyAttr struct {
 	attr    *C.struct_stat
 	timeout C.double
 }
+type ReplyStatFs struct {
+	stbuf *C.struct_statvfs
+}
 
 var reqLoc sync.RWMutex
 var reqMap map[int]ReplyHandler = make(map[int]ReplyHandler)
@@ -67,6 +70,12 @@ func BridgeGetAttr(fsId int, ino int64, handler ReplyHandler) {
 	req := NewReq(handler, fsId)
 	defer FreeReq(req)
 	C.bridge_getattr(req, C.fuse_ino_t(ino), (*C.struct_fuse_file_info)(nil))
+}
+
+func BridgeStatFs(fsId int, ino int64, handler ReplyHandler) {
+	req := NewReq(handler, fsId)
+	defer FreeReq(req)
+	C.bridge_statfs(req, C.fuse_ino_t(ino))
 }
 
 //export ll_Reply_Err
@@ -129,8 +138,9 @@ func ll_Reply_Buf(req C.int, buf *C.char, size C.size_t) C.int {
 
 //export ll_Reply_Statfs
 func ll_Reply_Statfs(req C.int, stbuf *C.struct_statvfs) C.int {
-	// TODO
-	return C.int(OK)
+	h := GetHandler(req)
+	r := h(int(req), &ReplyStatFs{stbuf})
+	return C.int(r)
 }
 
 //export ll_Reply_Xattr
