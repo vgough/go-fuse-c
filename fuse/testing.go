@@ -18,6 +18,10 @@ type ReplyNone struct{}
 type ReplyEntry struct {
 	e *C.struct_fuse_entry_param
 }
+type ReplyAttr struct {
+	attr    *C.struct_stat
+	timeout C.double
+}
 
 var reqLoc sync.RWMutex
 var reqMap map[int]ReplyHandler = make(map[int]ReplyHandler)
@@ -50,7 +54,6 @@ func BridgeLookup(fsId int, ino int64, name string, handler ReplyHandler) {
 	defer FreeReq(req)
 	cstr := C.CString(name)
 	defer C.free(unsafe.Pointer(cstr))
-
 	C.bridge_lookup(req, C.fuse_ino_t(ino), cstr)
 }
 
@@ -58,6 +61,12 @@ func BridgeForget(fsId int, ino int64, n int64, handler ReplyHandler) {
 	req := NewReq(handler, fsId)
 	defer FreeReq(req)
 	C.bridge_forget(req, C.fuse_ino_t(ino), C.ulong(n))
+}
+
+func BridgeGetAttr(fsId int, ino int64, handler ReplyHandler) {
+	req := NewReq(handler, fsId)
+	defer FreeReq(req)
+	C.bridge_getattr(req, C.fuse_ino_t(ino), (*C.struct_fuse_file_info)(nil))
 }
 
 //export ll_Reply_Err
@@ -89,8 +98,9 @@ func ll_Reply_Create(req C.int, e *C.struct_fuse_entry_param,
 
 //export ll_Reply_Attr
 func ll_Reply_Attr(req C.int, attr *C.struct_stat, timeout C.double) C.int {
-	// TODO
-	return C.int(OK)
+	h := GetHandler(req)
+	r := h(int(req), &ReplyAttr{attr, timeout})
+	return C.int(r)
 }
 
 //export ll_Reply_Readlink

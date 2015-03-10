@@ -78,3 +78,33 @@ func TestForget(t *testing.T) {
 		})
 	})
 }
+
+func TestGetAttr(t *testing.T) {
+	fs := NewMemFs()
+	fsId := RegisterRawFs(fs)
+	defer DeregisterRawFs(fsId)
+
+	Convey("GetAttr on existing directory", t, func() {
+		BridgeGetAttr(fsId, 1, func(id int, r interface{}) int {
+			So(r, ShouldHaveSameTypeAs, &ReplyAttr{})
+			a := r.(*ReplyAttr)
+			stat := a.attr
+			So(stat, ShouldNotBeNil)
+			So(stat.st_ino, ShouldEqual, 1)
+			return int(OK)
+		})
+	})
+
+	Convey("GetAttr on nonexistant node", t, func() {
+		BridgeGetAttr(fsId, 1000, func(id int, r interface{}) int {
+			switch r := r.(type) {
+			case *ReplyErr:
+				So(r.err, ShouldEqual, ENOENT)
+
+			default:
+				t.Errorf("Unexpected reply: %#v", r)
+			}
+			return int(OK)
+		})
+	})
+}

@@ -171,7 +171,6 @@ func (m *MemFs) stat(ino int64) *InoAttr {
 }
 
 func (m *MemFs) GetAttr(ino int64, info *FileInfo) (attr *InoAttr, err Status) {
-
 	s := m.stat(ino)
 	if s == nil {
 		return nil, ENOENT
@@ -202,9 +201,7 @@ func (m *MemFs) SetAttr(ino int64, attr *InoAttr, mask SetAttrMask, fi *FileInfo
 	return s, OK
 }
 
-func (m *MemFs) Lookup(parent int64, name string) (
-	entry *Entry, err Status) {
-
+func (m *MemFs) Lookup(parent int64, name string) (entry *Entry, err Status) {
 	n, err := m.dirNode(parent)
 	if err != OK {
 		return nil, err
@@ -233,9 +230,7 @@ func (m *MemFs) StatFs(ino int64) (stat *StatVfs, status Status) {
 	return
 }
 
-func (m *MemFs) ReadDir(ino int64, fi *FileInfo, off int64, size int,
-	w DirEntryWriter) Status {
-
+func (m *MemFs) ReadDir(ino int64, fi *FileInfo, off int64, size int, w DirEntryWriter) Status {
 	n, err := m.dirNode(ino)
 	if err != OK {
 		return err
@@ -341,7 +336,6 @@ func (m *MemFs) Unlink(dir int64, name string) Status {
 }
 
 func (m *MemFs) Read(p []byte, ino int64, off int64, fi *FileInfo) (int, Status) {
-
 	n, err := m.fileNode(ino)
 	if err != OK {
 		return 0, err
@@ -358,7 +352,6 @@ func (m *MemFs) Read(p []byte, ino int64, off int64, fi *FileInfo) (int, Status)
 }
 
 func (m *MemFs) Write(p []byte, ino int64, off int64, fi *FileInfo) (int, Status) {
-
 	n, err := m.fileNode(ino)
 	if err != OK {
 		return 0, err
