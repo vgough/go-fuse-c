@@ -22,8 +22,33 @@ type ReplyAttr struct {
 	attr    *C.struct_stat
 	timeout C.double
 }
+type ReplyXattr struct {
+	count int64
+}
 type ReplyStatFs struct {
 	stbuf *C.struct_statvfs
+}
+type ReplyReadlink struct {
+	link string
+}
+type ReplyOpen struct {
+	fi *C.struct_fuse_file_info
+}
+type ReplyCreate struct {
+	e  *C.struct_fuse_entry_param
+	fi *C.struct_fuse_file_info
+}
+type ReplyWrite struct {
+	count int64
+}
+type ReplyBuf struct {
+	buf []byte
+}
+type ReplyAddDirentry struct {
+	buf   []byte
+	name  string
+	stbuf *C.struct_stat
+	off   int64
 }
 
 var reqLoc sync.RWMutex
@@ -78,80 +103,75 @@ func BridgeStatFs(fsId int, ino int64, handler ReplyHandler) {
 	C.bridge_statfs(req, C.fuse_ino_t(ino))
 }
 
+func handleReply(req C.int, v interface{}) C.int {
+	h := GetHandler(req)
+	return C.int(h(int(req), v))
+}
+
 //export ll_Reply_Err
 func ll_Reply_Err(req C.int, err C.int) C.int {
-	h := GetHandler(req)
-	r := h(int(req), &ReplyErr{Status(err)})
-	return C.int(r)
+	return handleReply(req, &ReplyErr{Status(err)})
 }
 
 //export ll_Reply_None
 func ll_Reply_None(req C.int) {
-	h := GetHandler(req)
-	h(int(req), &ReplyNone{})
+	handleReply(req, &ReplyNone{})
 }
 
 //export ll_Reply_Entry
 func ll_Reply_Entry(req C.int, e *C.struct_fuse_entry_param) C.int {
-	h := GetHandler(req)
-	r := h(int(req), &ReplyEntry{e})
-	return C.int(r)
+	return handleReply(req, &ReplyEntry{e})
 }
 
 //export ll_Reply_Create
 func ll_Reply_Create(req C.int, e *C.struct_fuse_entry_param,
 	fi *C.struct_fuse_file_info) C.int {
-	// TODO
-	return C.int(OK)
+	return handleReply(req, &ReplyCreate{e, fi})
 }
 
 //export ll_Reply_Attr
 func ll_Reply_Attr(req C.int, attr *C.struct_stat, timeout C.double) C.int {
-	h := GetHandler(req)
-	r := h(int(req), &ReplyAttr{attr, timeout})
-	return C.int(r)
+	return handleReply(req, &ReplyAttr{attr, timeout})
 }
 
 //export ll_Reply_Readlink
 func ll_Reply_Readlink(req C.int, link *C.char) C.int {
-	// TODO
-	return C.int(OK)
+	return handleReply(req, &ReplyReadlink{C.GoString(link)})
 }
 
 //export ll_Reply_Open
 func ll_Reply_Open(req C.int, fi *C.struct_fuse_file_info) C.int {
-	// TODO
-	return C.int(OK)
+	return handleReply(req, &ReplyOpen{fi})
 }
 
 //export ll_Reply_Write
 func ll_Reply_Write(req C.int, count C.size_t) C.int {
-	// TODO
-	return C.int(OK)
+	return handleReply(req, &ReplyWrite{int64(count)})
 }
 
 //export ll_Reply_Buf
 func ll_Reply_Buf(req C.int, buf *C.char, size C.size_t) C.int {
-	// TODO
-	return C.int(OK)
+	return handleReply(req, &ReplyBuf{zeroCopyBuf(unsafe.Pointer(buf), int(size))})
 }
 
 //export ll_Reply_Statfs
 func ll_Reply_Statfs(req C.int, stbuf *C.struct_statvfs) C.int {
-	h := GetHandler(req)
-	r := h(int(req), &ReplyStatFs{stbuf})
-	return C.int(r)
+	return handleReply(req, &ReplyStatFs{stbuf})
 }
 
 //export ll_Reply_Xattr
 func ll_Reply_Xattr(req C.int, size C.size_t) C.int {
-	// TODO
-	return C.int(OK)
+	return handleReply(req, &ReplyXattr{int64(size)})
 }
 
 //export ll_Add_Direntry
 func ll_Add_Direntry(req C.int, buf *C.char, size C.size_t,
 	name *C.char, stbuf *C.struct_stat, off C.off_t) C.int {
-	// TODO
-	return C.int(OK)
+	s := &ReplyAddDirentry{
+		buf:   zeroCopyBuf(unsafe.Pointer(buf), int(size)),
+		name:  C.GoString(name),
+		stbuf: stbuf,
+		off:   int64(off),
+	}
+	return handleReply(req, s)
 }
