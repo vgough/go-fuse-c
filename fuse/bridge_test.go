@@ -2,8 +2,22 @@ package fuse
 
 import (
 	. "github.com/smartystreets/goconvey/convey"
+	"os"
 	"testing"
 )
+
+var fs RawFileSystem
+var fsId int
+
+func TestMain(m *testing.M) {
+	fs = NewMemFs()
+	fsId = RegisterRawFs(fs)
+
+	r := m.Run()
+
+	DeregisterRawFs(fsId)
+	os.Exit(r)
+}
 
 func TestVersion(t *testing.T) {
 	version := Version()
@@ -13,9 +27,6 @@ func TestVersion(t *testing.T) {
 }
 
 func TestLookup(t *testing.T) {
-	fs := NewMemFs()
-	fsId := RegisterRawFs(fs)
-	defer DeregisterRawFs(fsId)
 	fileEnt, _ := fs.Mknod(1, "exists", 0444, 0)
 
 	Convey("Lookup invalid inode", t, func() {
@@ -67,10 +78,6 @@ func TestLookup(t *testing.T) {
 }
 
 func TestForget(t *testing.T) {
-	fs := NewMemFs()
-	fsId := RegisterRawFs(fs)
-	defer DeregisterRawFs(fsId)
-
 	Convey("Forget uses reply_none", t, func() {
 		BridgeForget(fsId, 100, 1, func(id int, r interface{}) int {
 			So(r, ShouldHaveSameTypeAs, &ReplyNone{})
@@ -80,10 +87,6 @@ func TestForget(t *testing.T) {
 }
 
 func TestGetAttr(t *testing.T) {
-	fs := NewMemFs()
-	fsId := RegisterRawFs(fs)
-	defer DeregisterRawFs(fsId)
-
 	Convey("GetAttr on existing directory", t, func() {
 		BridgeGetAttr(fsId, 1, func(id int, r interface{}) int {
 			So(r, ShouldHaveSameTypeAs, &ReplyAttr{})
@@ -110,10 +113,6 @@ func TestGetAttr(t *testing.T) {
 }
 
 func TestStatFs(t *testing.T) {
-	fs := NewMemFs()
-	fsId := RegisterRawFs(fs)
-	defer DeregisterRawFs(fsId)
-
 	Convey("StatFs on undefined inode", t, func() {
 		BridgeStatFs(fsId, 0, func(id int, r interface{}) int {
 			So(r, ShouldHaveSameTypeAs, &ReplyStatFs{})
