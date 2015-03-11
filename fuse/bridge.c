@@ -48,8 +48,7 @@ int fuse_test_req_id(fuse_req_t req) {
   return r->req_id;
 }
 
-// Test wrappers which handle const conversion since the exported Go functions
-// can't be marked as having const parameters.
+// Test wrappers which call Go function handlers.
 int test_ll_Reply_Err(fuse_req_t req, int err) { return ll_Reply_Err(fuse_test_req_id(req), err); }
 void test_ll_Reply_None(fuse_req_t req) { ll_Reply_None(fuse_test_req_id(req)); }
 int test_ll_Reply_Entry(fuse_req_t req, const struct fuse_entry_param *e) {
@@ -88,14 +87,15 @@ size_t test_ll_Add_Direntry(fuse_req_t req, char *buf, size_t bufsize, const cha
 }
 void *test_ll_Req_Userdata(fuse_req_t req) {
   struct test_fuse_req *r = (struct test_fuse_req *)req;
+  assert(r->magic == MAGIC_NUM);
   return &r->userdata;
 }
 
 // FUSE redirect functions.
-// By default, these point to functions which capture the result and make them available to the
-// unit tests.
-// When configured for production mode, in bridge_init, these functions point to the Fuse
-// counterparts.
+// By default, these point to the functions above, which capture the results and make them
+// available to the unit tests.
+// When configured for production mode, in bridge_init, these functions point to the raw FUSE
+// functions.
 static int (*ll_reply_err)(fuse_req_t req, int err) = test_ll_Reply_Err;
 static void (*ll_reply_none)(fuse_req_t req) = test_ll_Reply_None;
 static int (*ll_reply_entry)(fuse_req_t req,
