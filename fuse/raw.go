@@ -242,49 +242,43 @@ type ConnInfo struct {
 }
 
 type Entry struct {
-	/** Unique inode number
-	 *
-	 * In lookup, zero means negative entry (from version 2.5)
-	 * Returning ENOENT also means negative entry, but by setting zero
-	 * ino the kernel may cache negative entries for entry_timeout
-	 * seconds.
-	 */
+	// Ino is a unique inode number for the filesystem entry.
+	//
+	// In lookup, zero means negative entry (from version 2.5)
+	// Returning ENOENT also means negative entry, but by setting zero
+	// ino the kernel may cache negative entries for entry_timeout
+	// seconds.
 	Ino int64
 
-	/** Generation number for this entry.
-	 *
-	 * If the file system will be exported over NFS, the
-	 * ino/generation pairs need to be unique over the file
-	 * system's lifetime (rather than just the mount time). So if
-	 * the file system reuses an inode after it has been deleted,
-	 * it must assign a new, previously unused generation number
-	 * to the inode at the same time.
-	 *
-	 * The generation must be non-zero, otherwise FUSE will treat
-	 * it as an error.
-	 *
-	 */
+	// Generation number for this entry.
+	//
+	// If the file system will be exported over NFS, the
+	// ino/generation pairs need to be unique over the file
+	// system's lifetime (rather than just the mount time). So if
+	// the file system reuses an inode after it has been deleted,
+	// it must assign a new, previously unused generation number
+	// to the inode at the same time.
+	//
+	// The generation must be non-zero, otherwise FUSE will treat
+	// it as an error.
 	Generation int64
 
-	/**
-	 * Inode attributes.
-	 */
+	// Inode attributes.
 	Attr *InoAttr
 
-	/** Validity timeout (in seconds) for the attributes */
+	// Validity timeout (in seconds) for the attributes
 	AttrTimeout float64
 
-	/** Validity timeout (in seconds) for the name */
+	// Validity timeout (in seconds) for the name
 	EntryTimeout float64
 }
 
-/** Inode attributes.
- *
- * Even if Timeout == 0, attr must be correct. For example,
- * for open(), FUSE uses attr.Size from lookup() to determine
- * how many bytes to request. If this value is not correct,
- * incorrect data will be returned.
- */
+// Inode attributes.
+//
+// Even if Timeout == 0, attr must be correct. For example,
+// for open(), FUSE uses attr.Size from lookup() to determine
+// how many bytes to request. If this value is not correct,
+// incorrect data will be returned.
 type InoAttr struct {
 	Ino   int64
 	Size  int64
@@ -298,6 +292,6 @@ type InoAttr struct {
 	Ctim time.Time
 	Mtim time.Time
 
-	/** Validity timeout (in seconds) for the attributes */
+	// Validity timeout (in seconds) for the attributes.
 	Timeout float64
 }

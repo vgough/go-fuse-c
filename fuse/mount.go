@@ -1,12 +1,18 @@
-// Provides a CGO wrapper for the FUSE low-level API.
 package fuse
 
 // #include "wrapper.h"
 // #include <stdlib.h>
 import "C"
 
-// TODO: check which operations are provided and tell the C code, so that it only
-// sets up bridge methods for implemented operations.
+// MountAndRun mounts the filesystem and enters the Fuse event loop.
+// The argumenst are passed to libfuse to mount the filesystem.  Any flags supported by libfuse are
+// allowed. The call returns immediately on error, or else blocks until the filesystem is
+// unmounted.
+//
+// Example:
+//
+//   fs := &MyFs{}
+//   err := fuse.MountAndRun(os.Args, fs)
 func MountAndRun(args []string, fs RawFileSystem) int {
 	id := RegisterRawFs(fs)
 	defer DeregisterRawFs(id)

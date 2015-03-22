@@ -19,6 +19,12 @@ var nextFsId int = 1
 
 // RegisterRawFs registers a filesystem with the bridge layer.
 // Returns an integer id, which identifies the filesystem instance.
+//
+// When calling the FUSE lowlevel initialization method (eg fuse_lowlevel_new), the userdata
+// argument must be a pointer to an integer holding this id value.  The bridge methods use this to
+// determine which filesystem will handle FUSE callbacks.
+//
+// When the filesystem is no longer active, DeregisterRawFs can be called to release resources.
 func RegisterRawFs(fs RawFileSystem) int {
 	fsMapLock.Lock()
 	defer fsMapLock.Unlock()
@@ -29,6 +35,7 @@ func RegisterRawFs(fs RawFileSystem) int {
 	return id
 }
 
+// DeregisterRawFs releases a previously allocated filesystem id from RegisterRawFs.
 func DeregisterRawFs(id int) {
 	fsMapLock.Lock()
 	defer fsMapLock.Unlock()
@@ -43,6 +50,7 @@ func GetRawFs(id int) RawFileSystem {
 	return fs
 }
 
+// Version returns the version number from the linked libfuse client implementation.
 func Version() int {
 	return int(C.fuse_version())
 }

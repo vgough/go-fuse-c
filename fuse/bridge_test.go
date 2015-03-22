@@ -30,9 +30,9 @@ func TestLookup(t *testing.T) {
 	fileEnt, _ := fs.Mknod(1, "exists", 0444, 0)
 
 	Convey("Lookup invalid inode", t, func() {
-		BridgeLookup(fsId, 1000, "test", func(id int, r interface{}) int {
+		bridgeLookup(fsId, 1000, "test", func(id int, r interface{}) int {
 			switch r := r.(type) {
-			case *ReplyErr:
+			case *replyErr:
 				So(r.err, ShouldEqual, ENOENT)
 
 			default:
@@ -43,9 +43,9 @@ func TestLookup(t *testing.T) {
 	})
 
 	Convey("Lookup invalid file", t, func() {
-		BridgeLookup(fsId, 1, "test", func(id int, r interface{}) int {
+		bridgeLookup(fsId, 1, "test", func(id int, r interface{}) int {
 			switch r := r.(type) {
-			case *ReplyErr:
+			case *replyErr:
 				So(r.err, ShouldEqual, ENOENT)
 
 			default:
@@ -56,17 +56,17 @@ func TestLookup(t *testing.T) {
 	})
 
 	Convey("Lookup valid file", t, func() {
-		BridgeLookup(fsId, 1, "exists", func(id int, r interface{}) int {
-			So(r, ShouldHaveSameTypeAs, &ReplyEntry{})
+		bridgeLookup(fsId, 1, "exists", func(id int, r interface{}) int {
+			So(r, ShouldHaveSameTypeAs, &replyEntry{})
 			return int(OK)
 		})
 	})
 
 	Convey("Lookup invalid node type", t, func() {
 		// Pass a file inode as the directory.
-		BridgeLookup(fsId, fileEnt.Ino, "test", func(id int, r interface{}) int {
+		bridgeLookup(fsId, fileEnt.Ino, "test", func(id int, r interface{}) int {
 			switch r := r.(type) {
-			case *ReplyErr:
+			case *replyErr:
 				So(r.err, ShouldEqual, ENOTDIR)
 
 			default:
@@ -79,8 +79,8 @@ func TestLookup(t *testing.T) {
 
 func TestForget(t *testing.T) {
 	Convey("Forget uses reply_none", t, func() {
-		BridgeForget(fsId, 100, 1, func(id int, r interface{}) int {
-			So(r, ShouldHaveSameTypeAs, &ReplyNone{})
+		bridgeForget(fsId, 100, 1, func(id int, r interface{}) int {
+			So(r, ShouldHaveSameTypeAs, &replyNone{})
 			return int(OK)
 		})
 	})
@@ -88,9 +88,9 @@ func TestForget(t *testing.T) {
 
 func TestGetAttr(t *testing.T) {
 	Convey("GetAttr on existing directory", t, func() {
-		BridgeGetAttr(fsId, 1, func(id int, r interface{}) int {
-			So(r, ShouldHaveSameTypeAs, &ReplyAttr{})
-			a := r.(*ReplyAttr)
+		bridgeGetAttr(fsId, 1, func(id int, r interface{}) int {
+			So(r, ShouldHaveSameTypeAs, &replyAttr{})
+			a := r.(*replyAttr)
 			stat := a.attr
 			So(stat, ShouldNotBeNil)
 			So(stat.st_ino, ShouldEqual, 1)
@@ -99,9 +99,9 @@ func TestGetAttr(t *testing.T) {
 	})
 
 	Convey("GetAttr on nonexistant node", t, func() {
-		BridgeGetAttr(fsId, 1000, func(id int, r interface{}) int {
+		bridgeGetAttr(fsId, 1000, func(id int, r interface{}) int {
 			switch r := r.(type) {
-			case *ReplyErr:
+			case *replyErr:
 				So(r.err, ShouldEqual, ENOENT)
 
 			default:
@@ -114,8 +114,8 @@ func TestGetAttr(t *testing.T) {
 
 func TestStatFs(t *testing.T) {
 	Convey("StatFs on undefined inode", t, func() {
-		BridgeStatFs(fsId, 0, func(id int, r interface{}) int {
-			So(r, ShouldHaveSameTypeAs, &ReplyStatFs{})
+		bridgeStatFs(fsId, 0, func(id int, r interface{}) int {
+			So(r, ShouldHaveSameTypeAs, &replyStatFs{})
 			return int(OK)
 		})
 	})

@@ -6,6 +6,11 @@ package fuse
 //
 // This implementation is intended to be used as the base implementation for a filesystem, so that
 // all methods not implemented by the derived type will be handled here.
+//
+// Usage example:
+//   type MyFs struct {
+//     fuse.DefaultRawFileSystem
+//   }
 type DefaultRawFileSystem struct {
 }
 

@@ -28,6 +28,9 @@ type iNode struct {
 	mode int
 }
 
+// MemFs implements an in-memory filesystem.
+//
+// Directories are stored as an in-memory hash table.  Files are stored as byte arrays.
 type MemFs struct {
 	DefaultRawFileSystem
 
@@ -35,6 +38,7 @@ type MemFs struct {
 	nextId int64
 }
 
+// NewMemFs creates a new in-memory filesystem.
 func NewMemFs() *MemFs {
 	root := &memDir{nodes: make(map[string]int64)}
 	m := &MemFs{

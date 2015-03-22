@@ -38,6 +38,7 @@ const (
 	EISDIR    = Status(syscall.EISDIR)    // 21 - is a directory
 )
 
+// AccessMode holds flags indicating read or write requirements for Open calls.
 type AccessMode int32
 
 const (
@@ -46,6 +47,7 @@ const (
 	O_RDWR   = AccessMode(2)
 )
 
+// FsFlags holds filesystem configuration flags.
 type FsFlags int32
 
 const (
@@ -53,6 +55,7 @@ const (
 	ST_NOSUID = FsFlags(2) // Ignore suid and sgid bits
 )
 
+// SetAttrMask holds flags indicating which metadata to set in a SetAttr call.
 type SetAttrMask int32
 
 const (
