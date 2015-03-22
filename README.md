@@ -2,6 +2,7 @@ go-fuse-c
 =========
 
 [![Build Status](https://travis-ci.org/vgough/go-fuse-c.svg)](https://travis-ci.org/vgough/go-fuse-c)
+[![GoDoc](https://godoc.org/github.com/vgough/go-fuse-c?status.svg)](http://godoc.org/github.com/vgough/go-fuse-c/fuse)
 
 CGO wrapper for FUSE C low-level API.
 
