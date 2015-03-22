@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	FUSE_ROOT_ID     = 1
+	FUSE_ROOT_ID     = 1 // Inode number of the root node.
 	FUSE_UNKNOWN_INO = 0xffffffff
 
 	S_IFDIR = syscall.S_IFDIR
