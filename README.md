@@ -6,6 +6,23 @@ go-fuse-c
 
 CGO wrapper for FUSE C low-level API.
 
+# Purpose
+
+After running into trouble getting a "pure-Go" FUSE wrapper working, I decided that the most
+practical approach was to wrap the C library.  This would allow reuse of system-specific libraries
+(like OSXFuse) and avoid ongoing work of porting fixes from multiple client libraries.
+
+Additionally, I want access to the FUSE Low-Level API, which deals with inodes, rather than the
+Path based API.  Although the Path based API makes it easy to write simple filesystems, the Low
+Level API is more powerful and makes it easier to make the filesystem behave like a built-in Posix
+filesystem.
+
+# STATUS
+
+2015-03-15: I've recently discovered another "pure-Go" wrapper,
+[bazillion/fuse](https://github.com/bazillion/fuse) which wraps the Low-level API and has support
+for Linux and OSX.  If this works well, then I may drop go-fuse-c entirely.
+
 # Examples
 
 To try the hello example, which corresponds to hello low-level API example
