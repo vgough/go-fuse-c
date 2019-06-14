@@ -17,12 +17,6 @@ Path based API.  Although the Path based API makes it easy to write simple files
 Level API is more powerful and makes it easier to make the filesystem behave like a built-in Posix
 filesystem.
 
-# STATUS
-
-2015-03-15: I've recently discovered another "pure-Go" wrapper,
-[bazillion/fuse](https://github.com/bazillion/fuse) which wraps the Low-level API and has support
-for Linux and OSX.  If this works well, then I may drop go-fuse-c entirely.
-
 # Examples
 
 To try the hello example, which corresponds to hello low-level API example
@@ -59,7 +53,4 @@ called during tests.  Function pointers are provided for all FUSE reply operatio
 to the real FUSE reply operations after the filesystem `init` method is called.  When running unit
 tests, the functions point to an implementation which captures the response for validation.
 
-Tests are being written using [GoConvey](https://github.com/smartystreets/goconvey).  Run
-`go test -v ./...` to execute tests once.  For an automatically-updating web UI, install and
-run `$GOPATH/bin/goconvey`.
-
+Run `go test -v ./...` to execute tests.

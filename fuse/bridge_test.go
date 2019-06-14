@@ -1,9 +1,10 @@
 package fuse
 
 import (
-	. "github.com/smartystreets/goconvey/convey"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 var fs RawFileSystem
@@ -21,19 +22,17 @@ func TestMain(m *testing.M) {
 
 func TestVersion(t *testing.T) {
 	version := Version()
-	Convey("Fuse version", t, func() {
-		So(version, ShouldBeGreaterThanOrEqualTo, 26)
-	})
+	require.True(t, version >= 26)
 }
 
 func TestLookup(t *testing.T) {
 	fileEnt, _ := fs.Mknod(1, "exists", 0444, 0)
 
-	Convey("Lookup invalid inode", t, func() {
+	t.Run("Lookup invalid inode", func(t *testing.T) {
 		bridgeLookup(fsId, 1000, "test", func(id int, r interface{}) int {
 			switch r := r.(type) {
 			case *replyErr:
-				So(r.err, ShouldEqual, ENOENT)
+				require.Equal(t, ENOENT, r.err)
 
 			default:
 				t.Errorf("Unexpected reply: %#v", r)
@@ -42,11 +41,11 @@ func TestLookup(t *testing.T) {
 		})
 	})
 
-	Convey("Lookup invalid file", t, func() {
+	t.Run("Lookup invalid file", func(t *testing.T) {
 		bridgeLookup(fsId, 1, "test", func(id int, r interface{}) int {
 			switch r := r.(type) {
 			case *replyErr:
-				So(r.err, ShouldEqual, ENOENT)
+				require.Equal(t, ENOENT, r.err)
 
 			default:
 				t.Errorf("Unexpected reply: %#v", r)
@@ -55,19 +54,19 @@ func TestLookup(t *testing.T) {
 		})
 	})
 
-	Convey("Lookup valid file", t, func() {
+	t.Run("Lookup valid file", func(t *testing.T) {
 		bridgeLookup(fsId, 1, "exists", func(id int, r interface{}) int {
-			So(r, ShouldHaveSameTypeAs, &replyEntry{})
+			require.IsType(t, &replyEntry{}, r)
 			return int(OK)
 		})
 	})
 
-	Convey("Lookup invalid node type", t, func() {
+	t.Run("Lookup invalid node type", func(t *testing.T) {
 		// Pass a file inode as the directory.
 		bridgeLookup(fsId, fileEnt.Ino, "test", func(id int, r interface{}) int {
 			switch r := r.(type) {
 			case *replyErr:
-				So(r.err, ShouldEqual, ENOTDIR)
+				require.Equal(t, ENOTDIR, r.err)
 
 			default:
 				t.Errorf("Unexpected reply: %#v", r)
@@ -78,31 +77,31 @@ func TestLookup(t *testing.T) {
 }
 
 func TestForget(t *testing.T) {
-	Convey("Forget uses reply_none", t, func() {
+	t.Run("Forget uses reply_none", func(t *testing.T) {
 		bridgeForget(fsId, 100, 1, func(id int, r interface{}) int {
-			So(r, ShouldHaveSameTypeAs, &replyNone{})
+			require.IsType(t, &replyNone{}, r)
 			return int(OK)
 		})
 	})
 }
 
 func TestGetAttr(t *testing.T) {
-	Convey("GetAttr on existing directory", t, func() {
+	t.Run("GetAttr on existing directory", func(t *testing.T) {
 		bridgeGetAttr(fsId, 1, func(id int, r interface{}) int {
-			So(r, ShouldHaveSameTypeAs, &replyAttr{})
+			require.IsType(t, &replyAttr{}, r)
 			a := r.(*replyAttr)
 			stat := a.attr
-			So(stat, ShouldNotBeNil)
-			So(stat.st_ino, ShouldEqual, 1)
+			require.NotNil(t, stat)
+			require.EqualValues(t, 1, stat.st_ino)
 			return int(OK)
 		})
 	})
 
-	Convey("GetAttr on nonexistant node", t, func() {
+	t.Run("GetAttr on nonexistant node", func(t *testing.T) {
 		bridgeGetAttr(fsId, 1000, func(id int, r interface{}) int {
 			switch r := r.(type) {
 			case *replyErr:
-				So(r.err, ShouldEqual, ENOENT)
+				require.Equal(t, ENOENT, r.err)
 
 			default:
 				t.Errorf("Unexpected reply: %#v", r)
@@ -113,9 +112,9 @@ func TestGetAttr(t *testing.T) {
 }
 
 func TestStatFs(t *testing.T) {
-	Convey("StatFs on undefined inode", t, func() {
+	t.Run("StatFs on undefined inode", func(t *testing.T) {
 		bridgeStatFs(fsId, 0, func(id int, r interface{}) int {
-			So(r, ShouldHaveSameTypeAs, &replyStatFs{})
+			require.IsType(t, &replyStatFs{}, r)
 			return int(OK)
 		})
 	})
