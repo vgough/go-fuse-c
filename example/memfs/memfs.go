@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/vgough/go-fuse-c/fuse"
 	"os"
+
+	"github.com/vgough/go-fuse-c/fuse"
 )
 
 func main() {

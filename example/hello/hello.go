@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/vgough/go-fuse-c/fuse"
 	"os"
 	"time"
+
+	"github.com/vgough/go-fuse-c/fuse"
 )
 
 const helloStr = "Hello World!\n"
