@@ -8,7 +8,7 @@ fuse_req_t new_fuse_test_req(int id, int userdata);
 void free_fuse_test_req(fuse_req_t req);
 int fuse_test_req_id(fuse_req_t req);
 
-// Bridge functions.  During production use, these are called by the FUSE lowlevel library.
+// Bridge functions.  These are called by the FUSE lowlevel library.
 // The signatures are provided so that they can be called by unit tests, bypassing FUSE.
 void bridge_init(void *userdata, struct fuse_conn_info *conn);
 void bridge_destroy(void *userdata);

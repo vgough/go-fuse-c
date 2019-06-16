@@ -312,8 +312,16 @@ func (m *MemFs) Rename(dir int64, name string, newdir int64, newname string) Sta
 	if err != OK {
 		return err
 	}
+	newOID, present := nd.dir.nodes[newname]
+	if present {
+		c := m.inodes[newOID]
+		if c.file == nil {
+			return EISDIR
+		}
 
-	_, present = nd.dir.nodes[newname]
+		delete(m.inodes, c.id)
+	}
+
 	nd.dir.nodes[newname] = oid
 	delete(od.dir.nodes, name)
 	return OK

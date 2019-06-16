@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"os"
 
 	"github.com/vgough/go-fuse-c/fuse"
@@ -9,5 +10,7 @@ import (
 func main() {
 	args := os.Args
 	ops := fuse.NewMemFs()
-	fuse.MountAndRun(args, ops)
+	if res := fuse.MountAndRun(args, ops); res < 0 {
+		log.Fatalf("failed with error: %d", res)
+	}
 }

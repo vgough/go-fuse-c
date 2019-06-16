@@ -17,6 +17,13 @@ var fsMapLock sync.RWMutex
 var rawFsMap map[int]RawFileSystem = make(map[int]RawFileSystem)
 var nextFsId int = 1
 
+// enableBridgeTestMode can be used to enable the global bridge test mode.
+// This prevents fuse_reply callbacks, since there is no active FUSE filesystem.
+// Used to allow internal testing of C <-> Go translation layers.
+func enableBridgeTestMode() {
+	C.enable_bridge_test_mode()
+}
+
 // RegisterRawFs registers a filesystem with the bridge layer.
 // Returns an integer id, which identifies the filesystem instance.
 //
@@ -442,5 +449,5 @@ func (e *Entry) toCEntry(o *C.struct_fuse_entry_param) {
 
 // Use C wrapper function to avoid issues with different typedef names on different systems.
 func toCTime(o *C.struct_timespec, i time.Time) {
-	C.fill_timespec(o, C.time_t(i.Unix()), C.ulong(i.Nanosecond()))
+	C.FillTimespec(o, C.time_t(i.Unix()), C.ulong(i.Nanosecond()))
 }

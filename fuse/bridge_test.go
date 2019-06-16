@@ -11,6 +11,8 @@ var fs RawFileSystem
 var fsId int
 
 func TestMain(m *testing.M) {
+	enableBridgeTestMode()
+
 	fs = NewMemFs()
 	fsId = RegisterRawFs(fs)
 

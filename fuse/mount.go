@@ -18,11 +18,14 @@ func MountAndRun(args []string, fs RawFileSystem) int {
 	defer DeregisterRawFs(id)
 
 	// Make args available to C code.
-	argv := make([]*C.char, len(args)+1)
-	for i, s := range args {
+	argv := make([]*C.char, 0, len(args)+1)
+	for _, s := range args {
 		p := C.CString(s)
-		argv[i] = p
+		argv = append(argv, p)
 	}
-	argc := C.int(len(args))
-	return int(C.MountAndRun(C.int(id), argc, &argv[0], C.getStandardBridgeOps()))
+	if len(args) < 2 {
+		argv = append(argv, C.CString("-h"))
+	}
+	argc := C.int(len(argv))
+	return int(C.MountAndRun(C.int(id), argc, &argv[0]))
 }
