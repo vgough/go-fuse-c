@@ -200,6 +200,18 @@ func (m *MemFs) SetAttr(ino int64, attr *InoAttr, mask SetAttrMask, fi *FileInfo
 	if mask&SET_ATTR_MTIME_NOW != 0 {
 		i.mtime = time.Now()
 	}
+	if mask&SET_ATTR_SIZE != 0 {
+		if i.file == nil {
+			return nil, EISDIR
+		}
+		if int(attr.Size) <= len(i.file.data) {
+			i.file.data = i.file.data[:attr.Size]
+		} else {
+			data := make([]byte, attr.Size)
+			copy(data, i.file.data)
+			i.file.data = data
+		}
+	}
 
 	s := m.stat(ino)
 	return s, OK
@@ -232,6 +244,10 @@ func (m *MemFs) StatFs(ino int64) (stat *StatVfs, status Status) {
 	}
 	status = OK
 	return
+}
+
+func (m *MemFs) Flush(ino int64, fi *FileInfo) Status {
+	return OK
 }
 
 func (m *MemFs) ReadDir(ino int64, fi *FileInfo, off int64, size int, w DirEntryWriter) Status {

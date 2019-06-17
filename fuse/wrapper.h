@@ -38,6 +38,8 @@ int DirBufAdd(struct DirBuf *db, const char *name, fuse_ino_t ino, int mode, off
 // This avoids typedef related issues.
 void FillTimespec(struct timespec *out, time_t sec, unsigned long nsec);
 
+// enable_bridge_test_mode turns on bridge-level test interceptors.
+// This should only be called in test code, and cannot be turned off once enabled.
 void enable_bridge_test_mode();
 
 #endif  // _WRAPPER_H_
