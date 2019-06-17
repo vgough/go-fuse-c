@@ -251,18 +251,19 @@ func ll_Flush(id C.int, ino C.fuse_ino_t, fi *C.struct_fuse_file_info) C.int {
 }
 
 //export ll_Read
-func ll_Read(id C.int, ino C.fuse_ino_t, off C.off_t,
-	fi *C.struct_fuse_file_info, buf unsafe.Pointer, size *C.int) C.int {
+func ll_Read(id C.int, req C.fuse_req_t, ino C.fuse_ino_t, size C.size_t, off C.off_t,
+	fi *C.struct_fuse_file_info) C.int {
 
 	fs := GetRawFs(int(id))
 
 	// Create slice backed by C buffer.
-	out := zeroCopyBuf(buf, int(*size))
-	n, err := fs.Read(out, int64(ino), int64(off), newFileInfo(fi))
-	if err == OK {
-		*size = C.int(n)
+	buf, err := fs.Read(int64(ino), int64(size), int64(off), newFileInfo(fi))
+	if err != OK {
+		return C.int(err)
 	}
-	return C.int(err)
+
+	ptr := unsafe.Pointer(&buf[0])
+	return C.reply_buf(req, (*C.char)(ptr), size)
 }
 
 //export ll_Write

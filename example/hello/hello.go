@@ -113,21 +113,23 @@ func (h *HelloFs) Open(ino int64, fi *fuse.FileInfo) fuse.Status {
 	}
 }
 
-func (h *HelloFs) Read(p []byte, ino int64, off int64,
-	fi *fuse.FileInfo) (int, fuse.Status) {
+func (h *HelloFs) Read(ino int64, size int64, off int64,
+	fi *fuse.FileInfo) ([]byte, fuse.Status) {
 
 	fmt.Println("Read", ino, off)
 	if ino != 2 {
-		return 0, fuse.ENOENT
+		return nil, fuse.ENOENT
 	}
 
 	data := []byte(helloStr)
-	n := len(data) - int(off)
-	if n < 0 {
-		n = 0
+	avail := int64(len(data)) - off
+	if avail < size {
+		size = avail
 	}
-	copy(p, data[off:])
-	return n, fuse.OK
+	if size <= 0 {
+		return []byte{}, fuse.OK
+	}
+	return data[off : off+size], fuse.OK
 }
 
 func main() {

@@ -126,7 +126,7 @@ static int reply_write(fuse_req_t req, size_t count) {
   return fuse_reply_write(req, count);
 }
 
-static int reply_buf(fuse_req_t req, char *buf, size_t size) {
+int reply_buf(fuse_req_t req, char *buf, size_t size) {
   if (bridge_test_mode) {
     return test_Reply_Buf(fuse_test_req_id(req), buf, size);
   }
@@ -309,18 +309,10 @@ void bridge_open(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi) {
 void bridge_read(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
                  struct fuse_file_info *fi) {
   int id = get_fsid(req);
-  char *buf = malloc(size);
-  if (!buf) {
-    reply_err(req, EINTR);
-  }
-  int n = size;
-  int err = ll_Read(id, ino, off, fi, buf, &n);
+  int err = ll_Read(id, req, ino, size, off, fi);
   if (err != 0) {
     reply_err(req, err);
   }
-
-  reply_buf(req, buf, n);
-  free(buf);
 }
 
 void bridge_write(fuse_req_t req, fuse_ino_t ino, const char *buf, size_t size, off_t off,

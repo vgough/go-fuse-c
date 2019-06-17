@@ -142,7 +142,7 @@ type RawFileSystem interface {
 	// Read should return exactly the number of bytes requested except on EOF or error.
 	//
 	// fi.Handle will contain the value set by the open method, if any.
-	Read(p []byte, ino int64, off int64, fi *FileInfo) (n int, err Status)
+	Read(ino int64, size int64, off int64, fi *FileInfo) (data []byte, err Status)
 
 	// Write writes data to an open file.
 	//

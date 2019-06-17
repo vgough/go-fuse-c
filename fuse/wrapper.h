@@ -42,4 +42,6 @@ void FillTimespec(struct timespec *out, time_t sec, unsigned long nsec);
 // This should only be called in test code, and cannot be turned off once enabled.
 void enable_bridge_test_mode();
 
+int reply_buf(fuse_req_t req, char *buf, size_t size);
+
 #endif  // _WRAPPER_H_

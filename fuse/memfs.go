@@ -363,20 +363,21 @@ func (m *MemFs) Unlink(dir int64, name string) Status {
 	return OK
 }
 
-func (m *MemFs) Read(p []byte, ino int64, off int64, fi *FileInfo) (int, Status) {
+func (m *MemFs) Read(ino, size, off int64, fi *FileInfo) ([]byte, Status) {
 	n, err := m.fileNode(ino)
 	if err != OK {
-		return 0, err
+		return nil, err
 	}
 
 	data := n.file.data
-	l := len(data) - int(off)
-	if l >= 0 {
-		copy(p, data[off:])
-		return l, OK
-	} else {
-		return 0, OK
+	avail := int64(len(data)) - off
+	if avail < size {
+		size = avail
 	}
+	if size <= 0 {
+		return []byte{}, OK
+	}
+	return data[off : off+size], OK
 }
 
 func (m *MemFs) Write(p []byte, ino int64, off int64, fi *FileInfo) (int, Status) {
@@ -386,13 +387,13 @@ func (m *MemFs) Write(p []byte, ino int64, off int64, fi *FileInfo) (int, Status
 	}
 
 	rl := int(off) + len(p)
-	if rl > cap(n.file.data) {
+	if rl > len(n.file.data) {
 		// Extend
 		newSlice := make([]byte, rl)
 		copy(newSlice, n.file.data)
 		n.file.data = newSlice
 	}
-	slice := n.file.data[0:rl]
-	copy(slice[int(off):rl], p)
+	slice := n.file.data[off:]
+	copy(slice, p)
 	return len(p), OK
 }
