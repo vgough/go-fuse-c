@@ -1,16 +1,11 @@
 image: golang:1.12
 
+variables:
+  GOFLAGS: -mod=readonly
+
 cache:
   paths:
-    - /apt-cache
-    - /go/src/github.com
-    - /go/src/golang.org
-    - /go/src/google.golang.org
-    - /go/src/gopkg.in
-
-stages:
-  - test
-  - build
+    - vendor
 
 before_script:
   - go mod vendor
@@ -20,7 +15,23 @@ before_script:
       libfuse-dev
   - apt-get clean
 
-unit_tests:
-  stage: test
-  script:
-    - make race
+stages:
+    - dependencies
+    - test
+
+.modcache: &modcache
+    key: modcache
+    paths:
+        - vendor/
+
+dependencies:
+    stage: dependencies
+    script: go mod download
+    cache: *modcache
+
+test:
+    stage: test
+    script: make race
+    cache:
+        <<: *modcache
+        policy: pull
