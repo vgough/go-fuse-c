@@ -18,6 +18,17 @@ rather than the Path based API.  Although the Path based API makes it easy to
 write simple filesystems, the Low Level API is more powerful and makes it easier
 to make the filesystem behave like a built-in Posix filesystem.
 
+## Alternatives
+
+* [GoFuse](https://github.com/hanwen/go-fuse) The GoFuse library is a little
+difficult to use, even if you're familiar with FUSE and Go.
+
+* [Bazil Fuse](https://github.com/bazil/fuse) Bazil has a low-level API which
+is similar to this library, however it is lacks good examples and has been
+mostly dead for years.  4 years ago (April 2015), I spent time figuring out all
+the interfaces used by Bazil in order to make an in-memory FS example.  That PR
+request is still pending [add in-memory example](https://github.com/bazil/fuse/pull/83).
+
 # Examples
 
 To try the hello example, which corresponds to hello low-level API example
