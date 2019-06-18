@@ -15,16 +15,10 @@ stages:
 before_script:
   - go mod vendor
   - apt-get install -y
-      fuse3
-      libfuse3-dev
+      fuse
   - apt-get clean
 
 unit_tests:
-  stage: test
-  script:
-    - make test
-
-race_detector:
   stage: test
   script:
     - make race
