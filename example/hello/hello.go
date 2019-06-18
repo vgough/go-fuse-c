@@ -103,11 +103,12 @@ func (h *helloFS) ReadDir(ino int64, fi *fuse.FileInfo, off int64, size int,
 
 func (h *helloFS) Open(ino int64, fi *fuse.FileInfo) fuse.Status {
 	fmt.Println("Open", ino)
-	if ino != 2 {
+	switch {
+	case ino != 2:
 		return fuse.EISDIR
-	} else if fi.AccessMode() != fuse.O_RDONLY {
+	case fi.AccessMode() != fuse.O_RDONLY:
 		return fuse.EACCES
-	} else {
+	default:
 		return fuse.OK
 	}
 }

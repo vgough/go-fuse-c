@@ -68,8 +68,8 @@ func zeroCopyBuf(buf unsafe.Pointer, size int) []byte {
 	// Create slice backed by C buffer.
 	hdr := reflect.SliceHeader{
 		Data: uintptr(buf),
-		Len:  int(size),
-		Cap:  int(size),
+		Len:  size,
+		Cap:  size,
 	}
 	return *(*[]byte)(unsafe.Pointer(&hdr))
 }
