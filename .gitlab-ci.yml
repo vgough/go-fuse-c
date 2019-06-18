@@ -8,7 +8,6 @@ cache:
     - vendor
 
 before_script:
-  - go mod vendor
   - apt-get update
   - apt-get install -y
       fuse
