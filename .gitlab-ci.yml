@@ -14,6 +14,10 @@ stages:
 
 before_script:
   - go mod vendor
+  - apt-get install -y
+      fuse3
+      libfuse3-dev
+  - apt-get clean
 
 unit_tests:
   stage: test
@@ -24,18 +28,3 @@ race_detector:
   stage: test
   script:
     - make race
-
-memory_sanitizer:
-  stage: test
-  script:
-    - make msan
-
-lint_code:
-  stage: test
-  script:
-    - make lint
-
-build:
-  stage: build
-  script:
-    - make
