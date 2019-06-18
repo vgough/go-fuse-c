@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <errno.h>        // IWYU pragma: keep
+#include <stdbool.h>      // for bool
 #include <stdint.h>       // for uint64_t
 #include <stdlib.h>       // for free
 #include <sys/stat.h>     // for stat, mode_t, dev_t
@@ -21,9 +22,9 @@ static const struct fuse_entry_param emptyEntry;
 static const struct statvfs emptyStatVfs;
 
 // bridge_test_mode is set to TRUE when testing the bridge interface.
-static boolean_t bridge_test_mode = FALSE;
+static bool bridge_test_mode = false;
 
-void enable_bridge_test_mode() { bridge_test_mode = TRUE; }
+void enable_bridge_test_mode() { bridge_test_mode = true; }
 
 static const int MAGIC_NUM = 0xA239DE71;
 
