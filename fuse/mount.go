@@ -13,9 +13,9 @@ import "C"
 //
 //   fs := &MyFs{}
 //   err := fuse.MountAndRun(os.Args, fs)
-func MountAndRun(args []string, fs RawFileSystem) int {
-	id := RegisterRawFs(fs)
-	defer DeregisterRawFs(id)
+func MountAndRun(args []string, fs FileSystem) int {
+	id := RegisterFS(fs)
+	defer DeregisterFS(id)
 
 	// Make args available to C code.
 	argv := make([]*C.char, 0, len(args)+1)

@@ -391,7 +391,7 @@ void bridge_fsyncdir(fuse_req_t req, fuse_ino_t ino, int datasync, struct fuse_f
 void bridge_statfs(fuse_req_t req, fuse_ino_t ino) {
   int id = get_fsid(req);
   struct statvfs stat = emptyStatVfs;
-  int err = ll_StatFs(id, ino, &stat);
+  int err = ll_StatFS(id, ino, &stat);
   if (err != 0) {
     reply_err(req, err);
   } else {
@@ -411,7 +411,7 @@ void bridge_setxattr(fuse_req_t req, fuse_ino_t ino, const char *name, const cha
 #endif
 
   int id = get_fsid(req);
-  int err = ll_SetXattr(id, ino, (char *)name, (char *)value, size, flags);
+  int err = ll_SetXAttr(id, ino, (char *)name, (char *)value, size, flags);
   reply_err(req, err);
 }
 
@@ -427,7 +427,7 @@ void bridge_getxattr(fuse_req_t req, fuse_ino_t ino, const char *name, size_t si
 
   int id = get_fsid(req);
   char *buf = (size > 0) ? malloc(size) : 0;
-  int err = ll_GetXattr(id, ino, (char *)name, buf, &size);
+  int err = ll_GetXAttr(id, ino, (char *)name, buf, &size);
   if (err != 0) {
     reply_err(req, err);
     return;
@@ -444,7 +444,7 @@ void bridge_getxattr(fuse_req_t req, fuse_ino_t ino, const char *name, size_t si
 void bridge_listxattr(fuse_req_t req, fuse_ino_t ino, size_t size) {
   int id = get_fsid(req);
   char *buf = (size > 0) ? malloc(size) : 0;
-  int err = ll_ListXattr(id, ino, buf, &size);
+  int err = ll_ListXAttr(id, ino, buf, &size);
   if (err != 0) {
     reply_err(req, err);
     return;
@@ -460,7 +460,7 @@ void bridge_listxattr(fuse_req_t req, fuse_ino_t ino, size_t size) {
 
 void bridge_removexattr(fuse_req_t req, fuse_ino_t ino, const char *name) {
   int id = get_fsid(req);
-  int err = ll_RemoveXattr(id, ino, (char *)name);
+  int err = ll_RemoveXAttr(id, ino, (char *)name);
   reply_err(req, err);
 }
 

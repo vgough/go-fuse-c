@@ -4,8 +4,8 @@ import (
 	"time"
 )
 
-// Raw operations for Fuse's LowLevel API.
-type RawFileSystem interface {
+// FileSystem operations for FUSE's LowLevel API.
+type FileSystem interface {
 	// Init initializes a filesystem.
 	// Called before any other filesystem method.
 	Init(*ConnInfo)
@@ -14,8 +14,8 @@ type RawFileSystem interface {
 	// Called on filesystem exit.
 	Destroy()
 
-	// StatFs gets file system statistics.
-	StatFs(ino int64) (*StatVfs, Status)
+	// StatFS gets file system statistics.
+	StatFS(ino int64) (*StatVFS, Status)
 
 	// Lookup finds a directory entry by name and get its attributes.
 	Lookup(dir int64, name string) (*Entry, Status)
@@ -32,7 +32,7 @@ type RawFileSystem interface {
 	// Release is called when there are no more references to an open file: all file descriptors are
 	// closed and all memory mappings are unmapped.
 	//
-	// For every open call, there will be exactly one release call.
+	// For every open call, there will be eXActly one release call.
 	//
 	// A filesystem may reply with an error, but error values are not returned to the close() or
 	// munmap() which triggered the release.
@@ -95,7 +95,7 @@ type RawFileSystem interface {
 
 	// ReleaseDir drops an open file reference.
 	//
-	// For every OpenDir call, there will be exactly one ReleaseDir call.
+	// For every OpenDir call, there will be eXActly one ReleaseDir call.
 	//
 	// fi.Handle will contain the value set by the OpenDir method, or will be undefined if the
 	// OpenDir method didn't set any value.
@@ -139,14 +139,14 @@ type RawFileSystem interface {
 
 	// Read reads data from an open file.
 	//
-	// Read should return exactly the number of bytes requested except on EOF or error.
+	// Read should return eXActly the number of bytes requested except on EOF or error.
 	//
 	// fi.Handle will contain the value set by the open method, if any.
 	Read(ino int64, size int64, off int64, fi *FileInfo) (data []byte, err Status)
 
 	// Write writes data to an open file.
 	//
-	// Write should return exactly the number of bytes requested except on error.
+	// Write should return eXActly the number of bytes requested except on error.
 	//
 	// fi.handle will contain the value set by the open method, if any.
 	Write(p []byte, ino int64, off int64, fi *FileInfo) (n int, err Status)
@@ -173,24 +173,25 @@ type RawFileSystem interface {
 	Create(parent int64, name string, mode int, fi *FileInfo) (*Entry, Status)
 
 	// Returns a list of the extended attribute keys.
-	ListXattrs(ino int64) ([]string, Status)
+	ListXAttrs(ino int64) ([]string, Status)
 
 	// Returns the size of the attribute value.
-	GetXattrSize(ino int64, name string) (int, Status)
+	GetXAttrSize(ino int64, name string) (int, Status)
 
 	// Get an extended attribute.
 	// Result placed in out buffer.
 	// Returns the number of bytes copied.
-	GetXattr(ino int64, name string, out []byte) (int, Status)
+	GetXAttr(ino int64, name string, out []byte) (int, Status)
 
 	// Set an extended attribute.
-	SetXattr(ino int64, name string, value []byte, flags int) Status
+	SetXAttr(ino int64, name string, value []byte, flags int) Status
 
 	// Remove an extended attribute.
-	RemoveXattr(ino int64, name string) Status
+	RemoveXAttr(ino int64, name string) Status
 }
 
-type StatVfs struct {
+// StatVFS contains filesystem statistics for StatFS calls.
+type StatVFS struct {
 	BlockSize  int64 // Filesystem block size
 	Blocks     int64 // Size of filesystem
 	BlocksFree int64 // Number of free blocks
@@ -203,12 +204,14 @@ type StatVfs struct {
 	NameMax int // Maximum filename length
 }
 
+// DirEntryWriter is part of the ReadDir API for storing directory entries.
 type DirEntryWriter interface {
 	// Returns true if the entry was added, false if there is no more space
 	// in the response buffer.
 	Add(name string, ino int64, mode int, next int64) bool
 }
 
+// FileInfo holds file information, used in a number of APIs.
 type FileInfo struct {
 	Flags     int
 	Writepage bool
@@ -223,10 +226,12 @@ type FileInfo struct {
 	LockOwner uint64
 }
 
+// AccessMode returns the file's access mode.
 func (f *FileInfo) AccessMode() AccessMode {
 	return AccessMode(f.Flags & 3)
 }
 
+// ConnInfo contains information about the FUSE connection.
 type ConnInfo struct {
 	// Major version of the protocol.
 	ProtoMajor int
@@ -241,6 +246,7 @@ type ConnInfo struct {
 	MaxReadahead int
 }
 
+// Entry is used by Lookup operations.
 type Entry struct {
 	// Ino is a unique inode number for the filesystem entry.
 	//
@@ -273,7 +279,7 @@ type Entry struct {
 	EntryTimeout float64
 }
 
-// Inode attributes.
+// InoAttr holds inode attributes.
 //
 // Even if Timeout == 0, attr must be correct. For example,
 // for open(), FUSE uses attr.Size from lookup() to determine
@@ -283,14 +289,14 @@ type InoAttr struct {
 	Ino   int64
 	Size  int64
 	Mode  int
-	Nlink int
+	NLink int
 
-	Uid *int // Defaults to the current uid
-	Gid *int // Defaults to the current gid
+	UID *int // Defaults to the current UID
+	GID *int // Defaults to the current gid
 
-	Atim time.Time
-	Ctim time.Time
-	Mtim time.Time
+	ATime time.Time // ATime is the inode access time
+	CTime time.Time // CTime is the inode creation time
+	MTime time.Time // MTime is the inode modification time
 
 	// Validity timeout (in seconds) for the attributes.
 	Timeout float64

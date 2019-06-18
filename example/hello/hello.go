@@ -12,11 +12,11 @@ const helloStr = "Hello World!\n"
 
 var mountTime = time.Now()
 
-type HelloFs struct {
-	fuse.DefaultRawFileSystem
+type helloFS struct {
+	fuse.DefaultFileSystem
 }
 
-func (h *HelloFs) stat(ino int64) *fuse.InoAttr {
+func (h *helloFS) stat(ino int64) *fuse.InoAttr {
 	fmt.Println("stat", ino)
 	stat := &fuse.InoAttr{
 		Ino:     ino,
@@ -25,35 +25,34 @@ func (h *HelloFs) stat(ino int64) *fuse.InoAttr {
 	switch ino {
 	case 1:
 		stat.Mode = fuse.S_IFDIR | 0755
-		stat.Nlink = 2
+		stat.NLink = 2
 	case 2:
 		stat.Mode = fuse.S_IFREG | 0444
-		stat.Nlink = 1
+		stat.NLink = 1
 		stat.Size = int64(len(helloStr))
 	default:
 		return nil
 	}
 
-	stat.Atim = mountTime
-	stat.Ctim = mountTime
-	stat.Mtim = mountTime
+	stat.ATime = mountTime
+	stat.CTime = mountTime
+	stat.MTime = mountTime
 
 	return stat
 }
 
-func (h *HelloFs) GetAttr(ino int64, info *fuse.FileInfo) (
+func (h *helloFS) GetAttr(ino int64, info *fuse.FileInfo) (
 	attr *fuse.InoAttr, err fuse.Status) {
 
 	fmt.Println("GetAttr", ino)
 	s := h.stat(ino)
 	if s == nil {
 		return nil, fuse.ENOENT
-	} else {
-		return s, fuse.OK
 	}
+	return s, fuse.OK
 }
 
-func (h *HelloFs) Lookup(parent int64, name string) (
+func (h *helloFS) Lookup(parent int64, name string) (
 	entry *fuse.Entry, err fuse.Status) {
 
 	fmt.Println("Lookup", parent, name)
@@ -71,9 +70,9 @@ func (h *HelloFs) Lookup(parent int64, name string) (
 	return e, fuse.OK
 }
 
-func (h *HelloFs) StatFs(ino int64) (stat *fuse.StatVfs, err fuse.Status) {
+func (h *helloFS) StatFs(ino int64) (stat *fuse.StatVFS, err fuse.Status) {
 	fmt.Println("statfs", ino)
-	stat = &fuse.StatVfs{
+	stat = &fuse.StatVFS{
 		Files:     1,
 		FilesFree: 0,
 		Flags:     fuse.ST_RDONLY,
@@ -82,7 +81,7 @@ func (h *HelloFs) StatFs(ino int64) (stat *fuse.StatVfs, err fuse.Status) {
 	return
 }
 
-func (h *HelloFs) ReadDir(ino int64, fi *fuse.FileInfo, off int64, size int,
+func (h *helloFS) ReadDir(ino int64, fi *fuse.FileInfo, off int64, size int,
 	w fuse.DirEntryWriter) fuse.Status {
 
 	fmt.Println("ReadDir", ino, off, size)
@@ -102,7 +101,7 @@ func (h *HelloFs) ReadDir(ino int64, fi *fuse.FileInfo, off int64, size int,
 	return fuse.OK
 }
 
-func (h *HelloFs) Open(ino int64, fi *fuse.FileInfo) fuse.Status {
+func (h *helloFS) Open(ino int64, fi *fuse.FileInfo) fuse.Status {
 	fmt.Println("Open", ino)
 	if ino != 2 {
 		return fuse.EISDIR
@@ -113,7 +112,7 @@ func (h *HelloFs) Open(ino int64, fi *fuse.FileInfo) fuse.Status {
 	}
 }
 
-func (h *HelloFs) Read(ino int64, size int64, off int64,
+func (h *helloFS) Read(ino int64, size int64, off int64,
 	fi *fuse.FileInfo) ([]byte, fuse.Status) {
 
 	fmt.Println("Read", ino, off)
@@ -135,6 +134,6 @@ func (h *HelloFs) Read(ino int64, size int64, off int64,
 func main() {
 	args := os.Args
 	fmt.Println(args)
-	ops := &HelloFs{}
+	ops := &helloFS{}
 	fmt.Println("fuse main returned", fuse.MountAndRun(args, ops))
 }

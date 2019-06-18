@@ -1,143 +1,178 @@
 package fuse
 
-// DefaultRawFileSystem provides a filesystem that returns a suitable default for all methods.
+// DefaultFileSystem provides a filesystem that returns a suitable default for all methods.
 // Most methods allow ENOSYS, which signals to FUSE that the operation is not implemented.
 // Other methods simply return success, if the method is optional.
 //
 // This implementation is intended to be used as the base implementation for a filesystem, so that
 // all methods not implemented by the derived type will be handled here.
 //
-// Usage example:
+// Usage eXAmple:
 //   type MyFs struct {
-//     fuse.DefaultRawFileSystem
+//     fuse.DefaultFileSystem
 //   }
-type DefaultRawFileSystem struct {
+type DefaultFileSystem struct {
 }
 
-func (d *DefaultRawFileSystem) Init(*ConnInfo) {}
+var _ FileSystem = &DefaultFileSystem{}
 
-func (d *DefaultRawFileSystem) Destroy() {}
-func (d *DefaultRawFileSystem) StatFs(ino int64) (*StatVfs, Status) {
+// Init implements FileSystem.
+func (d *DefaultFileSystem) Init(*ConnInfo) {}
+
+// Destroy implements FileSystem.
+func (d *DefaultFileSystem) Destroy() {}
+
+// StatFS implements FileSystem.
+func (d *DefaultFileSystem) StatFS(ino int64) (*StatVFS, Status) {
 	return nil, ENOSYS
 }
 
-func (d *DefaultRawFileSystem) Lookup(dir int64, name string) (entry *Entry, err Status) {
+// Lookup implements FileSystem.
+func (d *DefaultFileSystem) Lookup(dir int64, name string) (entry *Entry, err Status) {
 	return nil, ENOSYS
 }
 
-func (d *DefaultRawFileSystem) Forget(ino int64, n int) {}
+// Forget implements FileSystem.
+func (d *DefaultFileSystem) Forget(ino int64, n int) {}
 
-func (d *DefaultRawFileSystem) Release(ino int64, fi *FileInfo) Status {
+// Release implements FileSystem.
+func (d *DefaultFileSystem) Release(ino int64, fi *FileInfo) Status {
 	return ENOSYS
 }
 
-func (d *DefaultRawFileSystem) ReleaseDir(ino int64, fi *FileInfo) Status {
+// ReleaseDir implements FileSystem.
+func (d *DefaultFileSystem) ReleaseDir(ino int64, fi *FileInfo) Status {
 	return ENOSYS
 }
 
-func (d *DefaultRawFileSystem) FSync(ino int64, dataOnly bool, fi *FileInfo) Status {
+// FSync implements FileSystem.
+func (d *DefaultFileSystem) FSync(ino int64, dataOnly bool, fi *FileInfo) Status {
 	return ENOSYS
 }
 
-func (d *DefaultRawFileSystem) FSyncDir(ino int64, dataOnly bool, fi *FileInfo) Status {
+// FSyncDir implements FileSystem.
+func (d *DefaultFileSystem) FSyncDir(ino int64, dataOnly bool, fi *FileInfo) Status {
 	return ENOSYS
 }
 
-func (d *DefaultRawFileSystem) Flush(ino int64, fi *FileInfo) Status {
+// Flush implements FileSystem.
+func (d *DefaultFileSystem) Flush(ino int64, fi *FileInfo) Status {
 	return ENOSYS
 }
 
-func (d *DefaultRawFileSystem) GetAttr(ino int64, fi *FileInfo) (attr *InoAttr, err Status) {
+// GetAttr implements FileSystem.
+func (d *DefaultFileSystem) GetAttr(ino int64, fi *FileInfo) (attr *InoAttr, err Status) {
 	return nil, ENOSYS
 }
 
-func (d *DefaultRawFileSystem) SetAttr(ino int64, attr *InoAttr, mask SetAttrMask, fi *FileInfo) (
+// SetAttr implements FileSystem.
+func (d *DefaultFileSystem) SetAttr(ino int64, attr *InoAttr, mask SetAttrMask, fi *FileInfo) (
 	*InoAttr, Status) {
 	return nil, ENOSYS
 }
 
-func (d *DefaultRawFileSystem) ReadLink(ino int64) (string, Status) {
+// ReadLink implements FileSystem.
+func (d *DefaultFileSystem) ReadLink(ino int64) (string, Status) {
 	return "", ENOSYS
 }
 
-func (d *DefaultRawFileSystem) ReadDir(ino int64, fi *FileInfo, off int64, size int,
+// ReadDir implements FileSystem.
+func (d *DefaultFileSystem) ReadDir(ino int64, fi *FileInfo, off int64, size int,
 	w DirEntryWriter) Status {
 	return ENOSYS
 }
 
-func (d *DefaultRawFileSystem) Mknod(p int64, name string, mode int, rdev int) (
+// Mknod implements FileSystem.
+func (d *DefaultFileSystem) Mknod(p int64, name string, mode int, rdev int) (
 	entry *Entry, err Status) {
 	return nil, ENOSYS
 }
 
-func (d *DefaultRawFileSystem) Access(ino int64, mode int) Status {
+// Access implements FileSystem.
+func (d *DefaultFileSystem) Access(ino int64, mode int) Status {
 	return ENOSYS
 }
 
-func (d *DefaultRawFileSystem) Create(p int64, name string, mode int, fi *FileInfo) (
+// Create implements FileSystem.
+func (d *DefaultFileSystem) Create(p int64, name string, mode int, fi *FileInfo) (
 	entry *Entry, err Status) {
 	return nil, ENOSYS
 }
 
-func (d *DefaultRawFileSystem) Open(ino int64, fi *FileInfo) Status {
+// Open implements FileSystem.
+func (d *DefaultFileSystem) Open(ino int64, fi *FileInfo) Status {
 	return ENOSYS
 }
 
-func (d *DefaultRawFileSystem) OpenDir(ino int64, fi *FileInfo) Status {
+// OpenDir implements FileSystem.
+func (d *DefaultFileSystem) OpenDir(ino int64, fi *FileInfo) Status {
 	return OK
 }
 
-func (d *DefaultRawFileSystem) Read(p []byte, ino int64, off int64, fi *FileInfo) (
+// Read implements FileSystem.
+func (d *DefaultFileSystem) Read(ino int64, size int64, off int64, fi *FileInfo) (
+	data []byte, err Status) {
+	return nil, ENOSYS
+}
+
+// Write implements FileSystem.
+func (d *DefaultFileSystem) Write(p []byte, ino int64, off int64, fi *FileInfo) (
 	n int, err Status) {
 	return 0, ENOSYS
 }
 
-func (d *DefaultRawFileSystem) Write(p []byte, ino int64, off int64, fi *FileInfo) (
-	n int, err Status) {
-	return 0, ENOSYS
-}
-
-func (d *DefaultRawFileSystem) Mkdir(p int64, name string, mode int) (
+// Mkdir implements FileSystem.
+func (d *DefaultFileSystem) Mkdir(p int64, name string, mode int) (
 	entry *Entry, err Status) {
 	return nil, ENOSYS
 }
 
-func (d *DefaultRawFileSystem) Rmdir(p int64, name string) Status {
+// Rmdir implements FileSystem.
+func (d *DefaultFileSystem) Rmdir(p int64, name string) Status {
 	return ENOSYS
 }
 
-func (d *DefaultRawFileSystem) Symlink(link string, p int64, name string) (*Entry, Status) {
+// Symlink implements FileSystem.
+func (d *DefaultFileSystem) Symlink(link string, p int64, name string) (*Entry, Status) {
 	return nil, ENOSYS
 }
 
-func (d *DefaultRawFileSystem) Link(ino int64, newparent int64, name string) (*Entry, Status) {
+// Link implements FileSystem.
+func (d *DefaultFileSystem) Link(ino int64, newparent int64, name string) (*Entry, Status) {
 	return nil, ENOSYS
 }
 
-func (d *DefaultRawFileSystem) Rename(int64, string, int64, string) Status {
+// Rename implements FileSystem.
+func (d *DefaultFileSystem) Rename(int64, string, int64, string) Status {
 	return ENOSYS
 }
 
-func (d *DefaultRawFileSystem) Unlink(p int64, name string) Status {
+// Unlink implements FileSystem.
+func (d *DefaultFileSystem) Unlink(p int64, name string) Status {
 	return ENOSYS
 }
 
-func (d *DefaultRawFileSystem) ListXattrs(ino int64) ([]string, Status) {
+// ListXAttrs implements FileSystem.
+func (d *DefaultFileSystem) ListXAttrs(ino int64) ([]string, Status) {
 	return nil, ENOSYS
 }
 
-func (d *DefaultRawFileSystem) GetXattrSize(ino int64, name string) (int, Status) {
+// GetXAttrSize implements FileSystem.
+func (d *DefaultFileSystem) GetXAttrSize(ino int64, name string) (int, Status) {
 	return 0, ENOSYS
 }
 
-func (d *DefaultRawFileSystem) GetXattr(ino int64, name string, out []byte) (int, Status) {
+// GetXAttr implements FileSystem.
+func (d *DefaultFileSystem) GetXAttr(ino int64, name string, out []byte) (int, Status) {
 	return 0, ENOSYS
 }
 
-func (d *DefaultRawFileSystem) SetXattr(ino int64, name string, value []byte, flags int) Status {
+// SetXAttr implements FileSystem.
+func (d *DefaultFileSystem) SetXAttr(ino int64, name string, value []byte, flags int) Status {
 	return ENOSYS
 }
 
-func (d *DefaultRawFileSystem) RemoveXattr(ino int64, name string) Status {
+// RemoveXAttr implements FileSystem.
+func (d *DefaultFileSystem) RemoveXAttr(ino int64, name string) Status {
 	return ENOSYS
 }

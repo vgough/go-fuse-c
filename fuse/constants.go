@@ -5,8 +5,8 @@ import (
 )
 
 const (
-	FUSE_ROOT_ID     = 1 // Inode number of the root node.
-	FUSE_UNKNOWN_INO = 0xffffffff
+	// FUSERootID is the inode number of the root node.
+	FUSERootID = 1
 
 	S_IFDIR = syscall.S_IFDIR
 	S_IFREG = syscall.S_IFREG
@@ -18,7 +18,7 @@ const (
 type Status int32
 
 const (
-	OK        = Status(0)
+	OK        = Status(0)                 // OK is returned on success.
 	EACCES    = Status(syscall.EACCES)    // 13 - permission denied
 	EBUSY     = Status(syscall.EBUSY)     // 16 - resource busy
 	EEXIST    = Status(syscall.EEXIST)    // 17 - node exists

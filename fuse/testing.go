@@ -52,17 +52,17 @@ type replyAddDirentry struct {
 }
 
 var reqLoc sync.RWMutex
-var reqMap map[int]replyHandler = make(map[int]replyHandler)
-var nextReqId int = 1
+var reqMap = make(map[int]replyHandler)
+var nextReqID = 1
 
-func newReq(handler replyHandler, fsId int) C.fuse_req_t {
+func newReq(handler replyHandler, fsID int) C.fuse_req_t {
 	reqLoc.Lock()
 	defer reqLoc.Unlock()
 
-	id := nextReqId
-	nextReqId++
+	id := nextReqID
+	nextReqID++
 	reqMap[id] = handler
-	return C.new_fuse_test_req(C.int(id), C.int(fsId))
+	return C.new_fuse_test_req(C.int(id), C.int(fsID))
 }
 
 func freeReq(r C.fuse_req_t) {
@@ -70,41 +70,41 @@ func freeReq(r C.fuse_req_t) {
 	C.free_fuse_test_req(r)
 }
 
-func GetHandler(id C.int) replyHandler {
+func getHandler(id C.int) replyHandler {
 	reqLoc.Lock()
 	defer reqLoc.Unlock()
 
 	return reqMap[int(id)]
 }
 
-func bridgeLookup(fsId int, ino int64, name string, handler replyHandler) {
-	req := newReq(handler, fsId)
+func bridgeLookup(fsID int, ino int64, name string, handler replyHandler) {
+	req := newReq(handler, fsID)
 	defer freeReq(req)
 	cstr := C.CString(name)
 	defer C.free(unsafe.Pointer(cstr))
 	C.bridge_lookup(req, C.fuse_ino_t(ino), cstr)
 }
 
-func bridgeForget(fsId int, ino int64, n int64, handler replyHandler) {
-	req := newReq(handler, fsId)
+func bridgeForget(fsID int, ino int64, n int64, handler replyHandler) {
+	req := newReq(handler, fsID)
 	defer freeReq(req)
 	C.bridge_forget(req, C.fuse_ino_t(ino), C.ulong(n))
 }
 
-func bridgeGetAttr(fsId int, ino int64, handler replyHandler) {
-	req := newReq(handler, fsId)
+func bridgeGetAttr(fsID int, ino int64, handler replyHandler) {
+	req := newReq(handler, fsID)
 	defer freeReq(req)
 	C.bridge_getattr(req, C.fuse_ino_t(ino), (*C.struct_fuse_file_info)(nil))
 }
 
-func bridgeStatFs(fsId int, ino int64, handler replyHandler) {
-	req := newReq(handler, fsId)
+func bridgeStatFs(fsID int, ino int64, handler replyHandler) {
+	req := newReq(handler, fsID)
 	defer freeReq(req)
 	C.bridge_statfs(req, C.fuse_ino_t(ino))
 }
 
 func handleReply(req C.int, v interface{}) C.int {
-	h := GetHandler(req)
+	h := getHandler(req)
 	return C.int(h(int(req), v))
 }
 
