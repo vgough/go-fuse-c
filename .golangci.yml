@@ -1,6 +1,5 @@
 service:
   prepare:
     - apt-get update && apt-get install -y libfuse-dev
-    - export GO111MODULES=on
-    - go mod download
+    - make vendor
 

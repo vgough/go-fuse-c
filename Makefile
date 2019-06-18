@@ -7,6 +7,9 @@ GO_FILES := $(shell find . -name '*.go' | grep -v /vendor/ | grep -v _test.go)
 
 all: build
 
+vendor:
+	GO111MODULE=on go mod vendor
+
 lint: ## Lint the files
 	@golint -set_exit_status ${PKG_LIST}
 
