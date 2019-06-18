@@ -8,14 +8,15 @@ CGO wrapper for FUSE C low-level API.
 
 # Purpose
 
-After running into trouble getting a "pure-Go" FUSE wrapper working, I decided that the most
-practical approach was to wrap the C library.  This would allow reuse of system-specific libraries
-(like OSXFuse) and avoid ongoing work of porting fixes from multiple client libraries.
+After running into trouble getting a couple "pure-Go" FUSE wrapper working, I
+decided that the most practical approach was to wrap the C library.  This would
+allow reuse of system-specific libraries (like OSXFuse) and avoid ongoing work
+of porting fixes from multiple client libraries.
 
-Additionally, I want access to the FUSE Low-Level API, which deals with inodes, rather than the
-Path based API.  Although the Path based API makes it easy to write simple filesystems, the Low
-Level API is more powerful and makes it easier to make the filesystem behave like a built-in Posix
-filesystem.
+Additionally, I want access to the FUSE Low-Level API, which deals with inodes,
+rather than the Path based API.  Although the Path based API makes it easy to
+write simple filesystems, the Low Level API is more powerful and makes it easier
+to make the filesystem behave like a built-in Posix filesystem.
 
 # Examples
 
@@ -38,19 +39,20 @@ go build example/memfs/memfs.go
 
 ## Bridge functions and filesystem handles
 
-The C bridge functions handle the initial FUSE operation callbacks.  They call through to static Go
-functions which are exported in the bridge code.  These static functions lookup the filesystem from
-the provided filesystem handle and pass control to the filesystem implementation.
+The C bridge functions handle the initial FUSE operation callbacks.  They call
+through to static Go functions which are exported in the bridge code.  These
+static functions lookup the filesystem from the provided filesystem handle and
+pass control to the filesystem implementation.
 
-Integer filesystem handles are used instead of pointers as it is bad form to hold pointers to Go
-structures in C.
+Integer filesystem handles are used instead of pointers as it is bad form to
+hold pointers to Go structures in C.
 
 ## Testing
 
-Bridge methods are normally called from FUSE.  However the bridge methods are also available in Go
-for testing purposes.  Since types such as `fuse_req` are opaque, the FUSE reply methods cannot be
-called during tests.  Function pointers are provided for all FUSE reply operations, which point
-to the real FUSE reply operations after the filesystem `init` method is called.  When running unit
-tests, the functions point to an implementation which captures the response for validation.
+Bridge methods are normally called from FUSE.  However the bridge methods are
+also available in Go for testing purposes.  Since types such as `fuse_req` are
+opaque, the FUSE reply methods cannot be called during tests.  An internal
+function `enable_bridge_test_mode` is used to switch to using test reply methods
+so that the C / Go interfaces can be tested without running FUSE code.
 
 Run `go test -v ./...` to execute tests.
