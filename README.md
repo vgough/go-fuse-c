@@ -8,10 +8,11 @@ CGO wrapper for FUSE C low-level API.
 
 # Purpose
 
-After running into trouble getting a couple "pure-Go" FUSE wrapper working, I
+After running into trouble getting a couple "pure-Go" FUSE wrappers working, I
 decided that the most practical approach was to wrap the C library.  This would
 allow reuse of system-specific libraries (like OSXFuse) and avoid ongoing work
-of porting fixes from multiple client libraries.
+of porting fixes from multiple client libraries.  If your system has a C-API
+compatible libfuse, then it is likely that this will work with it.
 
 Additionally, I want access to the FUSE Low-Level API, which deals with inodes,
 rather than the Path based API.  Although the Path based API makes it easy to
@@ -20,14 +21,19 @@ to make the filesystem behave like a built-in Posix filesystem.
 
 ## Alternatives
 
-* [GoFuse](https://github.com/hanwen/go-fuse) The GoFuse library is a little
+For more FUSE-related references, see [Resources Related to FUSE](https://github.com/koding/awesome-fuse-fs)
+
+* [GoFuse](https://github.com/hanwen/go-fuse): The GoFuse library is a little
 difficult to use, even if you're familiar with FUSE and Go.
 
-* [Bazil Fuse](https://github.com/bazil/fuse) Bazil has a low-level API which
+* [Bazil Fuse](https://github.com/bazil/fuse): Bazil has a low-level API which
 is similar to this library, however it is lacks good examples and has been
 mostly dead for years.  4 years ago (April 2015), I spent time figuring out all
 the interfaces used by Bazil in order to make an in-memory FS example.  That PR
 request is still pending [add in-memory example](https://github.com/bazil/fuse/pull/83).
+
+* [jacobsa/fuse](https://github.com/jacobsa/fuse): Has lots of samples. Don't
+ have any experience with it myself.
 
 # Examples
 
