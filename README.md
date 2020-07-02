@@ -1,8 +1,8 @@
 go-fuse-c
 =========
 
-[![Build Status](https://gitlab.com/vgough/go-fuse-c/badges/master/pipeline.svg)](https://gitlab.com/vgough/go-fuse-c/pipelines)
-[![GoDoc](https://godoc.org/github.com/vgough/go-fuse-c?status.svg)](http://godoc.org/github.com/vgough/go-fuse-c/fuse)
+[![Build Status](https://gitlab.com/paddlesteamer/go-fuse-c/badges/master/pipeline.svg)](https://gitlab.com/paddlesteamer/go-fuse-c/pipelines)
+[![GoDoc](https://godoc.org/github.com/paddlesteamer/go-fuse-c?status.svg)](http://godoc.org/github.com/paddlesteamer/go-fuse-c/fuse)
 
 CGO wrapper for FUSE C low-level API.
 

@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/vgough/go-fuse-c/fuse"
+	"github.com/paddlesteamer/go-fuse-c/fuse"
 )
 
 func mount(mountpoint string) {

@@ -1,4 +1,4 @@
-module github.com/vgough/go-fuse-c
+module github.com/paddlesteamer/go-fuse-c
 
 go 1.12
 

@@ -1,5 +1,5 @@
 # test with
-# docker run --rm -v (pwd):/goapp -e RUN=1 -e REPO=github.com/vgough/go-fuse-c golangci/build-runner goenvbuild
+# docker run --rm -v (pwd):/goapp -e RUN=1 -e REPO=github.com/paddlesteamer/go-fuse-c golangci/build-runner goenvbuild
 
 service:
   golangci-lint-version: 1.17.x
@@ -9,7 +9,7 @@ service:
 
 linters-settings:
   goimports:
-    local-prefixes: github.com/vgough/go-fuse-c
+    local-prefixes: github.com/paddlesteamer/go-fuse-c
 
 linters:
   enable-all: true

@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/vgough/go-fuse-c/fuse"
+	"github.com/paddlesteamer/go-fuse-c/fuse"
 )
 
 func main() {
