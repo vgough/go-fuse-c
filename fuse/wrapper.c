@@ -125,11 +125,13 @@ int Run(struct fuse_session *se, struct fuse_chan *ch, const char *mountpoint) {
 
   err = fuse_session_loop(se);
 
-  fuse_remove_signal_handlers(se);
-  fuse_session_remove_chan(ch);
-  
-  fuse_session_destroy(se);
-  fuse_unmount(mountpoint, ch);
+  if (!fuse_session_exited) {
+    fuse_remove_signal_handlers(se);
+    fuse_session_remove_chan(ch);
+    
+    fuse_session_destroy(se);
+    fuse_unmount(mountpoint, ch);
+  }
 
   return err ? 1 : 0;
 }
@@ -138,6 +140,11 @@ void Exit(struct fuse_session *se, struct fuse_chan *ch, const char *mountpoint)
   fuse_session_exit(se);
 
   fuse_unmount(mountpoint, ch);
+
+  fuse_remove_signal_handlers(se);
+  fuse_session_remove_chan(ch);
+  
+  fuse_session_destroy(se);
 }
 
 // Returns 0 on success.
