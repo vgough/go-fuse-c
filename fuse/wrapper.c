@@ -125,7 +125,7 @@ int Run(struct fuse_session *se, struct fuse_chan *ch, const char *mountpoint) {
 
   err = fuse_session_loop(se);
 
-  if (!fuse_session_exited) {
+  if (!fuse_session_exited(se)) {
     fuse_remove_signal_handlers(se);
     fuse_unmount(mountpoint, ch);
     fuse_session_remove_chan(ch);
