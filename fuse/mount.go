@@ -4,7 +4,8 @@ package fuse
 // #include <stdlib.h>
 import "C"
 
-var sess *C.struct_fuse_session
+var fuseSess *C.struct_fuse_session
+var fuseChan *C.struct_fuse_chan
 
 // MountAndRun mounts the filesystem and enters the Fuse event loop.
 // The argumenst are passed to libfuse to mount the filesystem.  Any flags supported by libfuse are
@@ -38,20 +39,21 @@ func MountAndRun(args []string, fs FileSystem) int {
 		return -1
 	}
 
+	fuseChan = ch
+
 	se := C.NewSession(C.int(id), fuseArgs, ch)
 	if se == nil {
 		return -1
 	}
 
-	sess = se
+	fuseSess = se
 
 	return int(C.Run(se, ch, mountpoint))
 }
 
 func UMount(mountpoint string) {
-	C.Exit(sess)
+	C.Exit(fuseSess)
 
 	arg := C.CString(mountpoint)
-
-	C.fuse_unmount(arg, nil)
+	C.fuse_unmount(arg, fuseChan)
 }
