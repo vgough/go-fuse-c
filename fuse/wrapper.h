@@ -21,7 +21,13 @@
 // Returns an error code, or 0 on success.
 //
 // Takes ownership of the arguments, using free() to release them.
-int MountAndRun(int id, int argc, char *argv[]);
+// int MountAndRun(int id, int argc, char *argv[]);
+struct fuse_args *ParseArgs(int argc, char *argv[]);
+char *ParseMountpoint(struct fuse_args *args);
+struct fuse_chan *Mount(const char *mountpoint, struct fuse_args *args);
+struct fuse_session *NewSession(int id, struct fuse_args *args, struct fuse_chan *ch);
+int Run(struct fuse_session *se, struct fuse_chan *ch, const char *mountpoint);
+int Exit(struct fuse_session *se);
 
 struct DirBuf {
   fuse_req_t req;

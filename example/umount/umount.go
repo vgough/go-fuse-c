@@ -28,5 +28,5 @@ func main() {
 
 	time.Sleep(5 * time.Second)
 
-	fuse.UMount("mnt")
+	fuse.UMount(mountpoint)
 }

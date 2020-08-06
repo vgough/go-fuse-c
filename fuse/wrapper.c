@@ -61,41 +61,81 @@ static struct fuse_lowlevel_ops bridge_ll_ops = {
     //.fallocate
 };
 
-int MountAndRun(int id, int argc, char *argv[]) {
-  struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
-  struct fuse_chan *ch;
-  char *mountpoint;
-  int err = -1;
-  struct fuse_session *se;
+struct fuse_args *ParseArgs(int argc, char *argv[]) {
+  struct fuse_args *args = malloc(sizeof(struct fuse_args));
 
-  if (fuse_parse_cmdline(&args, &mountpoint, NULL, NULL) == -1) {
+  args->argc = argc;
+  args->argv = argv;
+  args->allocated = 0;
+
+  return args;
+}
+
+char *ParseMountpoint(struct fuse_args *args) {
+  char *mountpoint;
+
+  if (fuse_parse_cmdline(args, &mountpoint, NULL, NULL) == -1) {
     printf("unable to parse cmdline\n");
-    return 1;
+    return NULL;
   }
 
   if (mountpoint == NULL) {
     fprintf(stderr, "no mount point specified\n");
-    return 1;
-  }
-  ch = fuse_mount(mountpoint, &args);
-  if (ch == NULL) {
-    fuse_opt_free_args(&args);
-    return 1;
+    return NULL;
   }
 
-  se = fuse_lowlevel_new(&args, &bridge_ll_ops, sizeof(struct fuse_lowlevel_ops), &id);
-  if (se != NULL) {
-    if (fuse_set_signal_handlers(se) != -1) {
-      fuse_session_add_chan(se, ch);
-      err = fuse_session_loop(se);
-      fuse_remove_signal_handlers(se);
-      fuse_session_remove_chan(ch);
-    }
-    fuse_session_destroy(se);
+  return mountpoint;
+}
+
+struct fuse_chan *Mount(const char *mountpoint, struct fuse_args *args) {
+  struct fuse_chan *ch;
+
+  ch = fuse_mount(mountpoint, args);
+  if (ch == NULL) {
+    fuse_opt_free_args(args);
+    return NULL;
   }
+
+  return ch;
+}
+
+struct fuse_session *NewSession(int id, struct fuse_args *args, struct fuse_chan *ch) {
+  struct fuse_session *se;
+
+  int *id_p = malloc(sizeof(int));
+  *id_p = id;
+
+  se = fuse_lowlevel_new(args, &bridge_ll_ops, sizeof(struct fuse_lowlevel_ops), id_p);
+  if (se == NULL) {
+    return NULL;
+  }
+
+  if (fuse_set_signal_handlers(se) == -1) {
+    fuse_session_destroy(se);
+    return NULL;
+  }
+
+  fuse_session_add_chan(se, ch);
+
+  return se;
+}
+
+int Run(struct fuse_session *se, struct fuse_chan *ch, const char *mountpoint) {
+  int err = -1;
+
+  err = fuse_session_loop(se);
+
+  fuse_remove_signal_handlers(se);
+  fuse_session_remove_chan(ch);
+  
+  fuse_session_destroy(se);
   fuse_unmount(mountpoint, ch);
 
   return err ? 1 : 0;
+}
+
+int Exit(struct fuse_session *se) {
+  fuse_session_exit(se);
 }
 
 // Returns 0 on success.

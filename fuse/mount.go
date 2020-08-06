@@ -4,6 +4,8 @@ package fuse
 // #include <stdlib.h>
 import "C"
 
+var sess *C.struct_fuse_session
+
 // MountAndRun mounts the filesystem and enters the Fuse event loop.
 // The argumenst are passed to libfuse to mount the filesystem.  Any flags supported by libfuse are
 // allowed. The call returns immediately on error, or else blocks until the filesystem is
@@ -27,10 +29,28 @@ func MountAndRun(args []string, fs FileSystem) int {
 		argv = append(argv, C.CString("-h"))
 	}
 	argc := C.int(len(argv))
-	return int(C.MountAndRun(C.int(id), argc, &argv[0]))
+
+	fuseArgs := C.ParseArgs(argc, &argv[0])
+	mountpoint := C.ParseMountpoint(fuseArgs)
+
+	ch := C.Mount(mountpoint, fuseArgs)
+	if ch == nil {
+		return -1
+	}
+
+	se := C.NewSession(C.int(id), fuseArgs, ch)
+	if se == nil {
+		return -1
+	}
+
+	sess = se
+
+	return int(C.Run(se, ch, mountpoint))
 }
 
 func UMount(mountpoint string) {
+	C.Exit(sess)
+
 	arg := C.CString(mountpoint)
 
 	C.fuse_unmount(arg, nil)
