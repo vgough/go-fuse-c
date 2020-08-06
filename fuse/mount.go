@@ -52,8 +52,6 @@ func MountAndRun(args []string, fs FileSystem) int {
 }
 
 func UMount(mountpoint string) {
-	C.Exit(fuseSess)
-
 	arg := C.CString(mountpoint)
-	C.fuse_unmount(arg, fuseChan)
+	C.Exit(fuseSess, fuseChan, arg)
 }
