@@ -134,7 +134,7 @@ int Run(struct fuse_session *se, struct fuse_chan *ch, const char *mountpoint) {
   return err ? 1 : 0;
 }
 
-int Exit(struct fuse_session *se) {
+void Exit(struct fuse_session *se) {
   fuse_session_exit(se);
 }
 
