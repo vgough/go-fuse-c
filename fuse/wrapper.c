@@ -127,10 +127,10 @@ int Run(struct fuse_session *se, struct fuse_chan *ch, const char *mountpoint) {
 
   if (!fuse_session_exited) {
     fuse_remove_signal_handlers(se);
+    fuse_unmount(mountpoint, ch);
     fuse_session_remove_chan(ch);
     
     fuse_session_destroy(se);
-    fuse_unmount(mountpoint, ch);
   }
 
   return err ? 1 : 0;
@@ -139,9 +139,9 @@ int Run(struct fuse_session *se, struct fuse_chan *ch, const char *mountpoint) {
 void Exit(struct fuse_session *se, struct fuse_chan *ch, const char *mountpoint) {
   fuse_session_exit(se);
 
+  fuse_remove_signal_handlers(se);
   fuse_unmount(mountpoint, ch);
 
-  fuse_remove_signal_handlers(se);
   fuse_session_remove_chan(ch);
   
   fuse_session_destroy(se);
