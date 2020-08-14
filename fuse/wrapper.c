@@ -122,16 +122,11 @@ int Run(char *mountpoint, struct fuse_session *se, struct fuse_chan *ch) {
 
   err = fuse_session_loop(se);
 
-  printf("here\n");
   fuse_remove_signal_handlers(se);
-  printf("here\n");
   fuse_session_remove_chan(ch);
   
-  printf("here\n");
   fuse_session_destroy(se);
-  printf("here\n");
   fuse_unmount(mountpoint, ch);
-  printf("here\n");
 
   return err ? 1 : 0;
 }

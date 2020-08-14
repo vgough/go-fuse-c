@@ -4,7 +4,6 @@ package fuse
 // #include <stdlib.h>
 import "C"
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -46,7 +45,6 @@ func MountAndRun(args []string, fs FileSystem) int {
 
 	mp := C.GoString(mountpoint)
 
-	fmt.Println("mpinit:", mp)
 	RegisterFS(mp, fs, se, ch)
 	defer DeregisterFS(mp)
 
