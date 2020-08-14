@@ -4,7 +4,7 @@
 // Methods to create and work with a fuse_req test instance.
 // This provides a fuse_req_t during unit tests.
 // Note that fuse_req is not a public type, so the contents are opaque.
-fuse_req_t new_fuse_test_req(int id, int userdata);
+fuse_req_t new_fuse_test_req(int id, char *userdata);
 void free_fuse_test_req(fuse_req_t req);
 int fuse_test_req_id(fuse_req_t req);
 

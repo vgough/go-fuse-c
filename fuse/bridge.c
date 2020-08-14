@@ -29,12 +29,12 @@ void enable_bridge_test_mode() { bridge_test_mode = true; }
 static const int MAGIC_NUM = 0xA239DE71;
 
 struct test_fuse_req {
-  int magic;
-  int req_id;
-  int userdata;
+  int    magic;
+  int    req_id;
+  char * userdata;
 };
 
-fuse_req_t new_fuse_test_req(int id, int userdata) {
+fuse_req_t new_fuse_test_req(int id, char *userdata) {
   struct test_fuse_req *req = malloc(sizeof(struct test_fuse_req));
   req->magic = MAGIC_NUM;
   req->req_id = id;
@@ -54,14 +54,14 @@ int fuse_test_req_id(fuse_req_t req) {
   return r->req_id;
 }
 
-int get_fsid(fuse_req_t req) {
+char * get_fsid(fuse_req_t req) {
   if (bridge_test_mode) {
     struct test_fuse_req *r = (struct test_fuse_req *)req;
     assert(r->magic == MAGIC_NUM);
     return r->userdata;
   }
 
-  return *(int *)fuse_req_userdata(req);
+  return (char *)fuse_req_userdata(req);
 }
 
 static int reply_err(fuse_req_t req, int err) {
@@ -153,42 +153,40 @@ static int reply_xattr(fuse_req_t req, size_t count) {
 
 // The Init call first configures all FUSE wrappers to point to the real FUSE methods.
 void bridge_init(void *userdata, struct fuse_conn_info *conn) {
-  int id = *(int *)userdata;
-  ll_Init(id, conn);
+  ll_Init((char *) userdata, conn);
 }
 
 void bridge_destroy(void *userdata) {
-  int id = *(int *)userdata;
-  ll_Destroy(id);
+  ll_Destroy((char *) userdata);
 }
 
 void bridge_lookup(fuse_req_t req, fuse_ino_t parent, const char *name) {
-  int id = get_fsid(req);
+  char * mp = get_fsid(req);
   struct fuse_entry_param entry = emptyEntry;
   entry.attr.st_uid = getuid();
   entry.attr.st_gid = getgid();
-  int err = ll_Lookup(id, parent, (char *)name, &entry);
+  int err = ll_Lookup(mp, parent, (char *)name, &entry);
   if (err != 0) {
     reply_err(req, err);
   } else if (reply_entry(req, &entry) == -ENOENT) {
     // Request aborted, tell filesystem that reference was dropped.
-    ll_Forget(id, entry.ino, 1);
+    ll_Forget(mp, entry.ino, 1);
   }
 }
 
 void bridge_forget(fuse_req_t req, fuse_ino_t ino, unsigned long nlookup) {
-  int id = get_fsid(req);
-  ll_Forget(id, ino, (int)nlookup);
+  char * mp = get_fsid(req);
+  ll_Forget(mp, ino, (int)nlookup);
   reply_none(req);
 }
 
 void bridge_getattr(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi) {
-  int id = get_fsid(req);
+  char * mp = get_fsid(req);
   struct stat attr = emptyStat;
   attr.st_uid = getuid();
   attr.st_gid = getgid();
   double attr_timeout = 1.0;
-  int err = ll_GetAttr(id, ino, fi, &attr, &attr_timeout);
+  int err = ll_GetAttr(mp, ino, fi, &attr, &attr_timeout);
   if (err != 0) {
     reply_err(req, err);
   } else {
@@ -198,12 +196,12 @@ void bridge_getattr(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi) {
 
 void bridge_setattr(fuse_req_t req, fuse_ino_t ino, struct stat *attr, int to_set,
                     struct fuse_file_info *fi) {
-  int id = get_fsid(req);
+  char * mp = get_fsid(req);
   struct stat out = emptyStat;
   out.st_uid = getuid();
   out.st_gid = getgid();
   double attr_timeout = 1.0;
-  int err = ll_SetAttr(id, ino, attr, to_set, fi, &out, &attr_timeout);
+  int err = ll_SetAttr(mp, ino, attr, to_set, fi, &out, &attr_timeout);
   if (err != 0) {
     reply_err(req, err);
   } else {
@@ -212,9 +210,9 @@ void bridge_setattr(fuse_req_t req, fuse_ino_t ino, struct stat *attr, int to_se
 }
 
 void bridge_readlink(fuse_req_t req, fuse_ino_t ino) {
-  int id = get_fsid(req);
+  char * mp = get_fsid(req);
   int err = 0;
-  char *link = ll_ReadLink(id, ino, &err);
+  char *link = ll_ReadLink(mp, ino, &err);
   if (err != 0) {
     reply_err(req, err);
   } else {
@@ -226,11 +224,11 @@ void bridge_readlink(fuse_req_t req, fuse_ino_t ino) {
 }
 
 void bridge_mknod(fuse_req_t req, fuse_ino_t parent, const char *name, mode_t mode, dev_t rdev) {
-  int id = get_fsid(req);
+  char * mp = get_fsid(req);
   struct fuse_entry_param entry = emptyEntry;
   entry.attr.st_uid = getuid();
   entry.attr.st_gid = getgid();
-  int err = ll_Mknod(id, parent, (char *)name, mode, rdev, &entry);
+  int err = ll_Mknod(mp, parent, (char *)name, mode, rdev, &entry);
   if (err != 0) {
     reply_err(req, err);
   } else {
@@ -239,11 +237,11 @@ void bridge_mknod(fuse_req_t req, fuse_ino_t parent, const char *name, mode_t mo
 }
 
 void bridge_mkdir(fuse_req_t req, fuse_ino_t parent, const char *name, mode_t mode) {
-  int id = get_fsid(req);
+  char * mp = get_fsid(req);
   struct fuse_entry_param entry = emptyEntry;
   entry.attr.st_uid = getuid();
   entry.attr.st_gid = getgid();
-  int err = ll_Mkdir(id, parent, (char *)name, mode, &entry);
+  int err = ll_Mkdir(mp, parent, (char *)name, mode, &entry);
   if (err != 0) {
     reply_err(req, err);
   } else {
@@ -252,23 +250,23 @@ void bridge_mkdir(fuse_req_t req, fuse_ino_t parent, const char *name, mode_t mo
 }
 
 void bridge_unlink(fuse_req_t req, fuse_ino_t parent, const char *name) {
-  int id = get_fsid(req);
-  int err = ll_Unlink(id, parent, (char *)name);
+  char * mp = get_fsid(req);
+  int err = ll_Unlink(mp, parent, (char *)name);
   reply_err(req, err);
 }
 
 void bridge_rmdir(fuse_req_t req, fuse_ino_t parent, const char *name) {
-  int id = get_fsid(req);
-  int err = ll_Rmdir(id, parent, (char *)name);
+  char * mp = get_fsid(req);
+  int err = ll_Rmdir(mp, parent, (char *)name);
   reply_err(req, err);
 }
 
 void bridge_symlink(fuse_req_t req, const char *link, fuse_ino_t parent, const char *name) {
-  int id = get_fsid(req);
+  char * mp = get_fsid(req);
   struct fuse_entry_param entry = emptyEntry;
   entry.attr.st_uid = getuid();
   entry.attr.st_gid = getgid();
-  int err = ll_Symlink(id, (char *)link, parent, (char *)name, &entry);
+  int err = ll_Symlink(mp, (char *)link, parent, (char *)name, &entry);
   if (err != 0) {
     reply_err(req, err);
   } else {
@@ -278,17 +276,17 @@ void bridge_symlink(fuse_req_t req, const char *link, fuse_ino_t parent, const c
 
 void bridge_rename(fuse_req_t req, fuse_ino_t parent, const char *name, fuse_ino_t newparent,
                    const char *newname) {
-  int id = get_fsid(req);
-  int err = ll_Rename(id, parent, (char *)name, newparent, (char *)newname);
+  char * mp = get_fsid(req);
+  int err = ll_Rename(mp, parent, (char *)name, newparent, (char *)newname);
   reply_err(req, err);
 }
 
 void bridge_link(fuse_req_t req, fuse_ino_t ino, fuse_ino_t newparent, const char *newname) {
-  int id = get_fsid(req);
+  char * mp = get_fsid(req);
   struct fuse_entry_param entry = emptyEntry;
   entry.attr.st_uid = getuid();
   entry.attr.st_gid = getgid();
-  int err = ll_Link(id, ino, newparent, (char *)newname, &entry);
+  int err = ll_Link(mp, ino, newparent, (char *)newname, &entry);
   if (err != 0) {
     reply_err(req, err);
   } else {
@@ -297,20 +295,20 @@ void bridge_link(fuse_req_t req, fuse_ino_t ino, fuse_ino_t newparent, const cha
 }
 
 void bridge_open(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi) {
-  int id = get_fsid(req);
-  int err = ll_Open(id, ino, fi);
+  char * mp = get_fsid(req);
+  int err = ll_Open(mp, ino, fi);
   if (err != 0) {
     reply_err(req, err);
   } else if (reply_open(req, fi) == -ENOENT) {
     // Request aborted, let Go wrapper know.
-    ll_Release(id, ino, fi);
+    ll_Release(mp, ino, fi);
   }
 }
 
 void bridge_read(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
                  struct fuse_file_info *fi) {
-  int id = get_fsid(req);
-  int err = ll_Read(id, req, ino, size, off, fi);
+  char * mp = get_fsid(req);
+  int err = ll_Read(mp, req, ino, size, off, fi);
   if (err != 0) {
     reply_err(req, err);
   }
@@ -318,9 +316,9 @@ void bridge_read(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
 
 void bridge_write(fuse_req_t req, fuse_ino_t ino, const char *buf, size_t size, off_t off,
                   struct fuse_file_info *fi) {
-  int id = get_fsid(req);
+  char * mp = get_fsid(req);
   size_t written = size;
-  int err = ll_Write(id, ino, (char *)buf, &written, off, fi);
+  int err = ll_Write(mp, ino, (char *)buf, &written, off, fi);
   if (err == 0) {
     reply_write(req, written);
   } else {
@@ -329,44 +327,44 @@ void bridge_write(fuse_req_t req, fuse_ino_t ino, const char *buf, size_t size, 
 }
 
 void bridge_flush(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi) {
-  int id = get_fsid(req);
-  int err = ll_Flush(id, ino, fi);
+  char * mp = get_fsid(req);
+  int err = ll_Flush(mp, ino, fi);
   reply_err(req, err);
 }
 
 void bridge_release(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi) {
-  int id = get_fsid(req);
-  int err = ll_Release(id, ino, fi);
+  char * mp = get_fsid(req);
+  int err = ll_Release(mp, ino, fi);
   reply_err(req, err);
 }
 
 void bridge_fsync(fuse_req_t req, fuse_ino_t ino, int datasync, struct fuse_file_info *fi) {
-  int id = get_fsid(req);
-  int err = ll_FSync(id, ino, datasync, fi);
+  char * mp = get_fsid(req);
+  int err = ll_FSync(mp, ino, datasync, fi);
   reply_err(req, err);
 }
 
 void bridge_opendir(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi) {
-  int id = get_fsid(req);
-  int err = ll_OpenDir(id, ino, fi);
+  char * mp = get_fsid(req);
+  int err = ll_OpenDir(mp, ino, fi);
   if (err != 0) {
     reply_err(req, err);
   } else if (reply_open(req, fi) == -ENOENT) {
     // Request aborted, let Go wrapper know.
-    ll_ReleaseDir(id, ino, fi);
+    ll_ReleaseDir(mp, ino, fi);
   }
 }
 
 void bridge_readdir(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
                     struct fuse_file_info *fi) {
-  int id = get_fsid(req);
+  char * mp = get_fsid(req);
   struct DirBuf db;
   db.req = req;
   db.size = size < 4096 ? 4096 : size;
   db.buf = malloc(db.size);
   db.offset = 0;
 
-  int err = ll_ReadDir(id, ino, size, off, fi, &db);
+  int err = ll_ReadDir(mp, ino, size, off, fi, &db);
   if (err != 0) {
     reply_err(req, err);
   } else {
@@ -377,21 +375,21 @@ void bridge_readdir(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
 }
 
 void bridge_releasedir(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi) {
-  int id = get_fsid(req);
-  int err = ll_ReleaseDir(id, ino, fi);
+  char * mp = get_fsid(req);
+  int err = ll_ReleaseDir(mp, ino, fi);
   reply_err(req, err);
 }
 
 void bridge_fsyncdir(fuse_req_t req, fuse_ino_t ino, int datasync, struct fuse_file_info *fi) {
-  int id = get_fsid(req);
-  int err = ll_FSyncDir(id, ino, datasync, fi);
+  char * mp = get_fsid(req);
+  int err = ll_FSyncDir(mp, ino, datasync, fi);
   reply_err(req, err);
 }
 
 void bridge_statfs(fuse_req_t req, fuse_ino_t ino) {
-  int id = get_fsid(req);
+  char * mp = get_fsid(req);
   struct statvfs stat = emptyStatVfs;
-  int err = ll_StatFS(id, ino, &stat);
+  int err = ll_StatFS(mp, ino, &stat);
   if (err != 0) {
     reply_err(req, err);
   } else {
@@ -410,8 +408,8 @@ void bridge_setxattr(fuse_req_t req, fuse_ino_t ino, const char *name, const cha
                      size_t size, int flags) {
 #endif
 
-  int id = get_fsid(req);
-  int err = ll_SetXAttr(id, ino, (char *)name, (char *)value, size, flags);
+  char * mp = get_fsid(req);
+  int err = ll_SetXAttr(mp, ino, (char *)name, (char *)value, size, flags);
   reply_err(req, err);
 }
 
@@ -425,9 +423,9 @@ void bridge_getxattr(fuse_req_t req, fuse_ino_t ino, const char *name, size_t si
 void bridge_getxattr(fuse_req_t req, fuse_ino_t ino, const char *name, size_t size) {
 #endif
 
-  int id = get_fsid(req);
+  char * mp = get_fsid(req);
   char *buf = (size > 0) ? malloc(size) : 0;
-  int err = ll_GetXAttr(id, ino, (char *)name, buf, &size);
+  int err = ll_GetXAttr(mp, ino, (char *)name, buf, &size);
   if (err != 0) {
     reply_err(req, err);
     return;
@@ -442,9 +440,9 @@ void bridge_getxattr(fuse_req_t req, fuse_ino_t ino, const char *name, size_t si
 }
 
 void bridge_listxattr(fuse_req_t req, fuse_ino_t ino, size_t size) {
-  int id = get_fsid(req);
+  char * mp = get_fsid(req);
   char *buf = (size > 0) ? malloc(size) : 0;
-  int err = ll_ListXAttr(id, ino, buf, &size);
+  int err = ll_ListXAttr(mp, ino, buf, &size);
   if (err != 0) {
     reply_err(req, err);
     return;
@@ -459,24 +457,24 @@ void bridge_listxattr(fuse_req_t req, fuse_ino_t ino, size_t size) {
 }
 
 void bridge_removexattr(fuse_req_t req, fuse_ino_t ino, const char *name) {
-  int id = get_fsid(req);
-  int err = ll_RemoveXAttr(id, ino, (char *)name);
+  char * mp = get_fsid(req);
+  int err = ll_RemoveXAttr(mp, ino, (char *)name);
   reply_err(req, err);
 }
 
 void bridge_access(fuse_req_t req, fuse_ino_t ino, int mask) {
-  int id = get_fsid(req);
-  int err = ll_Access(id, ino, mask);
+  char * mp = get_fsid(req);
+  int err = ll_Access(mp, ino, mask);
   reply_err(req, err);
 }
 
 void bridge_create(fuse_req_t req, fuse_ino_t parent, const char *name, mode_t mode,
                    struct fuse_file_info *fi) {
-  int id = get_fsid(req);
+  char * mp = get_fsid(req);
   struct fuse_entry_param entry = emptyEntry;
   entry.attr.st_uid = getuid();
   entry.attr.st_gid = getgid();
-  int err = ll_Create(id, parent, (char *)name, mode, fi, &entry);
+  int err = ll_Create(mp, parent, (char *)name, mode, fi, &entry);
   if (err != 0) {
     reply_err(req, err);
   } else {

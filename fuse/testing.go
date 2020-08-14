@@ -55,14 +55,14 @@ var reqLoc sync.RWMutex
 var reqMap = make(map[int]replyHandler)
 var nextReqID = 1
 
-func newReq(handler replyHandler, fsID int) C.fuse_req_t {
+func newReq(handler replyHandler, mountpoint string) C.fuse_req_t {
 	reqLoc.Lock()
 	defer reqLoc.Unlock()
 
 	id := nextReqID
 	nextReqID++
 	reqMap[id] = handler
-	return C.new_fuse_test_req(C.int(id), C.int(fsID))
+	return C.new_fuse_test_req(C.int(id), C.CString(mountpoint))
 }
 
 func freeReq(r C.fuse_req_t) {
@@ -77,28 +77,28 @@ func getHandler(id C.int) replyHandler {
 	return reqMap[int(id)]
 }
 
-func bridgeLookup(fsID int, ino int64, name string, handler replyHandler) {
-	req := newReq(handler, fsID)
+func bridgeLookup(mountpoint string, ino int64, name string, handler replyHandler) {
+	req := newReq(handler, mountpoint)
 	defer freeReq(req)
 	cstr := C.CString(name)
 	defer C.free(unsafe.Pointer(cstr))
 	C.bridge_lookup(req, C.fuse_ino_t(ino), cstr)
 }
 
-func bridgeForget(fsID int, ino int64, n int64, handler replyHandler) {
-	req := newReq(handler, fsID)
+func bridgeForget(mountpoint string, ino int64, n int64, handler replyHandler) {
+	req := newReq(handler, mountpoint)
 	defer freeReq(req)
 	C.bridge_forget(req, C.fuse_ino_t(ino), C.ulong(n))
 }
 
-func bridgeGetAttr(fsID int, ino int64, handler replyHandler) {
-	req := newReq(handler, fsID)
+func bridgeGetAttr(mountpoint string, ino int64, handler replyHandler) {
+	req := newReq(handler, mountpoint)
 	defer freeReq(req)
 	C.bridge_getattr(req, C.fuse_ino_t(ino), (*C.struct_fuse_file_info)(nil))
 }
 
-func bridgeStatFs(fsID int, ino int64, handler replyHandler) {
-	req := newReq(handler, fsID)
+func bridgeStatFs(mountpoint string, ino int64, handler replyHandler) {
+	req := newReq(handler, mountpoint)
 	defer freeReq(req)
 	C.bridge_statfs(req, C.fuse_ino_t(ino))
 }

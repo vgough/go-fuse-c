@@ -87,7 +87,7 @@ char *ParseMountpoint(struct fuse_args *args) {
   return mountpoint;
 }
 
-struct fuse_chan *Mount(const char *mountpoint, struct fuse_args *args) {
+struct fuse_chan *Mount(char *mountpoint, struct fuse_args *args) {
   struct fuse_chan *ch;
 
   ch = fuse_mount(mountpoint, args);
@@ -99,13 +99,10 @@ struct fuse_chan *Mount(const char *mountpoint, struct fuse_args *args) {
   return ch;
 }
 
-struct fuse_session *NewSession(int id, struct fuse_args *args, struct fuse_chan *ch) {
+struct fuse_session *NewSession(char *mountpoint, struct fuse_args *args, struct fuse_chan *ch) {
   struct fuse_session *se;
 
-  int *id_p = malloc(sizeof(int));
-  *id_p = id;
-
-  se = fuse_lowlevel_new(args, &bridge_ll_ops, sizeof(struct fuse_lowlevel_ops), id_p);
+  se = fuse_lowlevel_new(args, &bridge_ll_ops, sizeof(struct fuse_lowlevel_ops), mountpoint);
   if (se == NULL) {
     return NULL;
   }
@@ -120,31 +117,29 @@ struct fuse_session *NewSession(int id, struct fuse_args *args, struct fuse_chan
   return se;
 }
 
-int Run(struct fuse_session *se, struct fuse_chan *ch, const char *mountpoint) {
+int Run(char *mountpoint, struct fuse_session *se, struct fuse_chan *ch) {
   int err = -1;
 
   err = fuse_session_loop(se);
 
-  if (!fuse_session_exited(se)) {
-    fuse_remove_signal_handlers(se);
-    fuse_unmount(mountpoint, ch);
-    fuse_session_remove_chan(ch);
-    
-    fuse_session_destroy(se);
-  }
+  printf("here\n");
+  fuse_remove_signal_handlers(se);
+  printf("here\n");
+  fuse_session_remove_chan(ch);
+  
+  printf("here\n");
+  fuse_session_destroy(se);
+  printf("here\n");
+  fuse_unmount(mountpoint, ch);
+  printf("here\n");
 
   return err ? 1 : 0;
 }
 
-void Exit(struct fuse_session *se, struct fuse_chan *ch, const char *mountpoint) {
+void Exit(char *mountpoint, struct fuse_session *se, struct fuse_chan *ch) {
   fuse_session_exit(se);
 
-  fuse_remove_signal_handlers(se);
   fuse_unmount(mountpoint, ch);
-
-  fuse_session_remove_chan(ch);
-  
-  fuse_session_destroy(se);
 }
 
 // Returns 0 on success.

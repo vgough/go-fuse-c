@@ -8,17 +8,17 @@ import (
 )
 
 var fs FileSystem
-var fsID int
+var mountpoint string = "mnt"
 
 func TestMain(m *testing.M) {
 	enableBridgeTestMode()
 
 	fs = NewMemFs()
-	fsID = RegisterFS(fs)
+	RegisterFS(mountpoint, fs, nil, nil)
 
 	r := m.Run()
 
-	DeregisterFS(fsID)
+	DeregisterFS(mountpoint)
 	os.Exit(r)
 }
 
@@ -31,7 +31,7 @@ func TestLookup(t *testing.T) {
 	fileEnt, _ := fs.Mknod(1, "exists", 0444, 0)
 
 	t.Run("Lookup invalid inode", func(t *testing.T) {
-		bridgeLookup(fsID, 1000, "test", func(id int, r interface{}) int {
+		bridgeLookup(mountpoint, 1000, "test", func(id int, r interface{}) int {
 			switch r := r.(type) {
 			case *replyErr:
 				require.Equal(t, ENOENT, r.err)
@@ -44,7 +44,7 @@ func TestLookup(t *testing.T) {
 	})
 
 	t.Run("Lookup invalid file", func(t *testing.T) {
-		bridgeLookup(fsID, 1, "test", func(id int, r interface{}) int {
+		bridgeLookup(mountpoint, 1, "test", func(id int, r interface{}) int {
 			switch r := r.(type) {
 			case *replyErr:
 				require.Equal(t, ENOENT, r.err)
@@ -57,7 +57,7 @@ func TestLookup(t *testing.T) {
 	})
 
 	t.Run("Lookup valid file", func(t *testing.T) {
-		bridgeLookup(fsID, 1, "exists", func(id int, r interface{}) int {
+		bridgeLookup(mountpoint, 1, "exists", func(id int, r interface{}) int {
 			require.IsType(t, &replyEntry{}, r)
 			return int(OK)
 		})
@@ -65,7 +65,7 @@ func TestLookup(t *testing.T) {
 
 	t.Run("Lookup invalid node type", func(t *testing.T) {
 		// Pass a file inode as the directory.
-		bridgeLookup(fsID, fileEnt.Ino, "test", func(id int, r interface{}) int {
+		bridgeLookup(mountpoint, fileEnt.Ino, "test", func(id int, r interface{}) int {
 			switch r := r.(type) {
 			case *replyErr:
 				require.Equal(t, ENOTDIR, r.err)
@@ -80,7 +80,7 @@ func TestLookup(t *testing.T) {
 
 func TestForget(t *testing.T) {
 	t.Run("Forget uses reply_none", func(t *testing.T) {
-		bridgeForget(fsID, 100, 1, func(id int, r interface{}) int {
+		bridgeForget(mountpoint, 100, 1, func(id int, r interface{}) int {
 			require.IsType(t, &replyNone{}, r)
 			return int(OK)
 		})
@@ -89,7 +89,7 @@ func TestForget(t *testing.T) {
 
 func TestGetAttr(t *testing.T) {
 	t.Run("GetAttr on existing directory", func(t *testing.T) {
-		bridgeGetAttr(fsID, 1, func(id int, r interface{}) int {
+		bridgeGetAttr(mountpoint, 1, func(id int, r interface{}) int {
 			require.IsType(t, &replyAttr{}, r)
 			a := r.(*replyAttr)
 			stat := a.attr
@@ -100,7 +100,7 @@ func TestGetAttr(t *testing.T) {
 	})
 
 	t.Run("GetAttr on nonexistant node", func(t *testing.T) {
-		bridgeGetAttr(fsID, 1000, func(id int, r interface{}) int {
+		bridgeGetAttr(mountpoint, 1000, func(id int, r interface{}) int {
 			switch r := r.(type) {
 			case *replyErr:
 				require.Equal(t, ENOENT, r.err)
@@ -115,7 +115,7 @@ func TestGetAttr(t *testing.T) {
 
 func TestStatFs(t *testing.T) {
 	t.Run("StatFs on undefined inode", func(t *testing.T) {
-		bridgeStatFs(fsID, 0, func(id int, r interface{}) int {
+		bridgeStatFs(mountpoint, 0, func(id int, r interface{}) int {
 			require.IsType(t, &replyStatFs{}, r)
 			return int(OK)
 		})

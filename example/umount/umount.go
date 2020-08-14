@@ -3,18 +3,19 @@ package main
 import (
 	"fmt"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/paddlesteamer/go-fuse-c/fuse"
 )
 
-func mount(mountpoint string) {
+func mount(mountpoint string, wg *sync.WaitGroup) {
+	defer wg.Done()
+
 	args := []string{"", mountpoint}
 	ops := &fuse.DefaultFileSystem{}
 
 	fmt.Println("fuse main returned", fuse.MountAndRun(args, ops))
-
-	os.Remove(mountpoint)
 }
 
 func main() {
@@ -24,11 +25,18 @@ func main() {
 		panic(err)
 	}
 
-	go mount(mountpoint)
+	wg := sync.WaitGroup{}
+	wg.Add(1)
 
-	time.Sleep(5 * time.Second)
+	go mount(mountpoint, &wg)
 
+	time.Sleep(3 * time.Second)
+
+	fmt.Println("umount")
 	fuse.UMount(mountpoint)
+	fmt.Println("umount done")
 
-	time.Sleep(time.Second)
+	wg.Wait()
+
+	os.Remove(mountpoint)
 }

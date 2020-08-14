@@ -3,9 +3,11 @@ package fuse
 // #include "wrapper.h"
 // #include <stdlib.h>
 import "C"
-
-var fuseSess *C.struct_fuse_session
-var fuseChan *C.struct_fuse_chan
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+)
 
 // MountAndRun mounts the filesystem and enters the Fuse event loop.
 // The argumenst are passed to libfuse to mount the filesystem.  Any flags supported by libfuse are
@@ -17,8 +19,6 @@ var fuseChan *C.struct_fuse_chan
 //   fs := &MyFs{}
 //   err := fuse.MountAndRun(os.Args, fs)
 func MountAndRun(args []string, fs FileSystem) int {
-	id := RegisterFS(fs)
-	defer DeregisterFS(id)
 
 	// Make args available to C code.
 	argv := make([]*C.char, 0, len(args)+1)
@@ -39,19 +39,30 @@ func MountAndRun(args []string, fs FileSystem) int {
 		return -1
 	}
 
-	fuseChan = ch
-
-	se := C.NewSession(C.int(id), fuseArgs, ch)
+	se := C.NewSession(mountpoint, fuseArgs, ch)
 	if se == nil {
 		return -1
 	}
 
-	fuseSess = se
+	mp := C.GoString(mountpoint)
 
-	return int(C.Run(se, ch, mountpoint))
+	fmt.Println("mpinit:", mp)
+	RegisterFS(mp, fs, se, ch)
+	defer DeregisterFS(mp)
+
+	return int(C.Run(mountpoint, se, ch))
 }
 
 func UMount(mountpoint string) {
-	arg := C.CString(mountpoint)
-	C.Exit(fuseSess, fuseChan, arg)
+	if !filepath.IsAbs(mountpoint) {
+		cwd, _ := os.Getwd()
+
+		mountpoint = filepath.Join(cwd, mountpoint)
+	}
+
+	mountpoint, _ = filepath.Abs(mountpoint)
+
+	minfo := getMountInfo(mountpoint)
+
+	C.Exit(C.CString(mountpoint), minfo.se, minfo.ch)
 }

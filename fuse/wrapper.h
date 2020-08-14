@@ -24,10 +24,10 @@
 // int MountAndRun(int id, int argc, char *argv[]);
 struct fuse_args *ParseArgs(int argc, char *argv[]);
 char *ParseMountpoint(struct fuse_args *args);
-struct fuse_chan *Mount(const char *mountpoint, struct fuse_args *args);
-struct fuse_session *NewSession(int id, struct fuse_args *args, struct fuse_chan *ch);
-int Run(struct fuse_session *se, struct fuse_chan *ch, const char *mountpoint);
-void Exit(struct fuse_session *se, struct fuse_chan *ch, const char *mountpoint);
+struct fuse_chan *Mount(char *mountpoint, struct fuse_args *args);
+struct fuse_session *NewSession(char *mountpoint, struct fuse_args *args, struct fuse_chan *ch);
+int Run(char *mountpoint, struct fuse_session *se, struct fuse_chan *ch);
+void Exit(char *mountpoint, struct fuse_session *se, struct fuse_chan *ch);
 
 struct DirBuf {
   fuse_req_t req;
