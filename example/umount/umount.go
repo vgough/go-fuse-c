@@ -32,9 +32,8 @@ func main() {
 
 	time.Sleep(3 * time.Second)
 
-	fmt.Println("umount")
+	fmt.Println("unmounting...")
 	fuse.UMount(mountpoint)
-	fmt.Println("umount done")
 
 	wg.Wait()
 

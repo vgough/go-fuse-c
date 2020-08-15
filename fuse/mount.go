@@ -30,7 +30,7 @@ func MountAndRun(args []string, fs FileSystem) int {
 	}
 	argc := C.int(len(argv))
 
-	fuseArgs := C.ParseArgs(argc, &argv[0])
+	fuseArgs := C.InitArgs(argc, &argv[0])
 	mountpoint := C.ParseMountpoint(fuseArgs)
 
 	ch := C.Mount(mountpoint, fuseArgs)

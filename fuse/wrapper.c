@@ -61,7 +61,7 @@ static struct fuse_lowlevel_ops bridge_ll_ops = {
     //.fallocate
 };
 
-struct fuse_args *ParseArgs(int argc, char *argv[]) {
+struct fuse_args *InitArgs(int argc, char *argv[]) {
   struct fuse_args *args = malloc(sizeof(struct fuse_args));
 
   args->argc = argc;
@@ -126,7 +126,6 @@ int Run(char *mountpoint, struct fuse_session *se, struct fuse_chan *ch) {
   fuse_session_remove_chan(ch);
   
   fuse_session_destroy(se);
-  fuse_unmount(mountpoint, ch);
 
   return err ? 1 : 0;
 }

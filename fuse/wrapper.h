@@ -16,17 +16,24 @@
 
 #include <sys/types.h>  // for off_t
 
-// Mounts the filesystem and runs the FUSE event loop.
+// Initialize fuse_args 
+struct fuse_args *InitArgs(int argc, char *argv[]);
+
+// Returns mountpoint from fuse arguments
+char *ParseMountpoint(struct fuse_args *args);
+
+// Mount file system and returns fuse_channel
+struct fuse_chan *Mount(char *mountpoint, struct fuse_args *args);
+
+// Creates a fuse session with provided mount point and arguments
+struct fuse_session *NewSession(char *mountpoint, struct fuse_args *args, struct fuse_chan *ch);
+
+// Runs the FUSE event loop.
 // This call does not return until the filesystem is unmounted.
 // Returns an error code, or 0 on success.
-//
-// Takes ownership of the arguments, using free() to release them.
-// int MountAndRun(int id, int argc, char *argv[]);
-struct fuse_args *ParseArgs(int argc, char *argv[]);
-char *ParseMountpoint(struct fuse_args *args);
-struct fuse_chan *Mount(char *mountpoint, struct fuse_args *args);
-struct fuse_session *NewSession(char *mountpoint, struct fuse_args *args, struct fuse_chan *ch);
 int Run(char *mountpoint, struct fuse_session *se, struct fuse_chan *ch);
+
+// Sets exit flag of the session and unmounts the filesystem
 void Exit(char *mountpoint, struct fuse_session *se, struct fuse_chan *ch);
 
 struct DirBuf {
