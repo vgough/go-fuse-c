@@ -13,7 +13,7 @@ var fsID int
 func TestMain(m *testing.M) {
 	enableBridgeTestMode()
 
-	fs = NewMemFs()
+	fs = NewMemFS()
 	fsID = RegisterFS(fs)
 
 	r := m.Run()

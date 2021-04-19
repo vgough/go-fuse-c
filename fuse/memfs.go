@@ -28,20 +28,20 @@ type iNode struct {
 	mode int
 }
 
-// MemFs implements an in-memory filesystem.
+// MemFS implements an in-memory filesystem.
 //
 // Directories are stored as an in-memory hash table.  Files are stored as byte arrays.
-type MemFs struct {
+type MemFS struct {
 	DefaultFileSystem
 
 	inodes map[int64]*iNode
 	nextID int64
 }
 
-// NewMemFs creates a new in-memory filesystem.
-func NewMemFs() *MemFs {
+// NewMemFS creates a new in-memory filesystem.
+func NewMemFS() *MemFS {
 	root := &memDir{nodes: make(map[string]int64)}
-	m := &MemFs{
+	m := &MemFS{
 		inodes: make(map[int64]*iNode),
 		nextID: 2, // inode 1 is reserved for the root directory.
 	}
@@ -56,7 +56,7 @@ func NewMemFs() *MemFs {
 	return m
 }
 
-func (m *MemFs) dirNode(parent int64) (*iNode, Status) {
+func (m *MemFS) dirNode(parent int64) (*iNode, Status) {
 	n := m.inodes[parent]
 	if n == nil {
 		return nil, ENOENT
@@ -67,7 +67,7 @@ func (m *MemFs) dirNode(parent int64) (*iNode, Status) {
 	return n, OK
 }
 
-func (m *MemFs) fileNode(ino int64) (*iNode, Status) {
+func (m *MemFS) fileNode(ino int64) (*iNode, Status) {
 	n := m.inodes[ino]
 	if n == nil {
 		return nil, ENOENT
@@ -79,7 +79,7 @@ func (m *MemFs) fileNode(ino int64) (*iNode, Status) {
 }
 
 // Mknod creates nodes.
-func (m *MemFs) Mknod(dir int64, name string, mode int, rdev int) (*Entry, Status) {
+func (m *MemFS) Mknod(dir int64, name string, mode int, rdev int) (*Entry, Status) {
 
 	n, err := m.dirNode(dir)
 	if err != OK {
@@ -115,7 +115,7 @@ func (m *MemFs) Mknod(dir int64, name string, mode int, rdev int) (*Entry, Statu
 }
 
 // Mkdir create directories.
-func (m *MemFs) Mkdir(dir int64, name string, mode int) (*Entry, Status) {
+func (m *MemFS) Mkdir(dir int64, name string, mode int) (*Entry, Status) {
 
 	n, err := m.dirNode(dir)
 	if err != OK {
@@ -151,7 +151,7 @@ func (m *MemFs) Mkdir(dir int64, name string, mode int) (*Entry, Status) {
 	return e, OK
 }
 
-func (m *MemFs) stat(ino int64) *InoAttr {
+func (m *MemFS) stat(ino int64) *InoAttr {
 	i := m.inodes[ino]
 	if i == nil {
 		return nil
@@ -177,7 +177,7 @@ func (m *MemFs) stat(ino int64) *InoAttr {
 }
 
 // GetAttr returns node attributes.
-func (m *MemFs) GetAttr(ino int64, info *FileInfo) (attr *InoAttr, err Status) {
+func (m *MemFS) GetAttr(ino int64, info *FileInfo) (attr *InoAttr, err Status) {
 	s := m.stat(ino)
 	if s == nil {
 		return nil, ENOENT
@@ -186,7 +186,7 @@ func (m *MemFs) GetAttr(ino int64, info *FileInfo) (attr *InoAttr, err Status) {
 }
 
 // SetAttr changes node attributes.
-func (m *MemFs) SetAttr(ino int64, attr *InoAttr, mask SetAttrMask, fi *FileInfo) (
+func (m *MemFS) SetAttr(ino int64, attr *InoAttr, mask SetAttrMask, fi *FileInfo) (
 	*InoAttr, Status) {
 
 	i := m.inodes[ino]
@@ -221,7 +221,7 @@ func (m *MemFs) SetAttr(ino int64, attr *InoAttr, mask SetAttrMask, fi *FileInfo
 }
 
 // Lookup finds node by name.
-func (m *MemFs) Lookup(parent int64, name string) (entry *Entry, err Status) {
+func (m *MemFS) Lookup(parent int64, name string) (entry *Entry, err Status) {
 	n, err := m.dirNode(parent)
 	if err != OK {
 		return nil, err
@@ -243,7 +243,7 @@ func (m *MemFs) Lookup(parent int64, name string) (entry *Entry, err Status) {
 }
 
 // StatFS returns filesystem stats.
-func (m *MemFs) StatFS(ino int64) (stat *StatVFS, status Status) {
+func (m *MemFS) StatFS(ino int64) (stat *StatVFS, status Status) {
 	stat = &StatVFS{
 		Files: int64(len(m.inodes)),
 	}
@@ -252,12 +252,12 @@ func (m *MemFs) StatFS(ino int64) (stat *StatVFS, status Status) {
 }
 
 // Flush syncs filesystem data.
-func (m *MemFs) Flush(ino int64, fi *FileInfo) Status {
+func (m *MemFS) Flush(ino int64, fi *FileInfo) Status {
 	return OK
 }
 
 // ReadDir reads a directory.
-func (m *MemFs) ReadDir(ino int64, fi *FileInfo, off int64, size int, w DirEntryWriter) Status {
+func (m *MemFS) ReadDir(ino int64, fi *FileInfo, off int64, size int, w DirEntryWriter) Status {
 	n, err := m.dirNode(ino)
 	if err != OK {
 		return err
@@ -293,13 +293,13 @@ func (m *MemFs) ReadDir(ino int64, fi *FileInfo, off int64, size int, w DirEntry
 }
 
 // Open opens files.
-func (m *MemFs) Open(ino int64, fi *FileInfo) Status {
+func (m *MemFS) Open(ino int64, fi *FileInfo) Status {
 	_, err := m.fileNode(ino)
 	return err
 }
 
 // Rmdir removes directories.
-func (m *MemFs) Rmdir(dir int64, name string) Status {
+func (m *MemFS) Rmdir(dir int64, name string) Status {
 	n, err := m.dirNode(dir)
 	if err != OK {
 		return err
@@ -324,7 +324,7 @@ func (m *MemFs) Rmdir(dir int64, name string) Status {
 }
 
 // Rename changes names.
-func (m *MemFs) Rename(dir int64, name string, newdir int64, newname string) Status {
+func (m *MemFS) Rename(dir int64, name string, newdir int64, newname string) Status {
 	od, err := m.dirNode(dir)
 	if err != OK {
 		return err
@@ -354,7 +354,7 @@ func (m *MemFs) Rename(dir int64, name string, newdir int64, newname string) Sta
 }
 
 // Unlink removes files.
-func (m *MemFs) Unlink(dir int64, name string) Status {
+func (m *MemFS) Unlink(dir int64, name string) Status {
 	n, err := m.dirNode(dir)
 	if err != OK {
 		return err
@@ -375,7 +375,7 @@ func (m *MemFs) Unlink(dir int64, name string) Status {
 }
 
 // Read loads data from a file.
-func (m *MemFs) Read(ino, size, off int64, fi *FileInfo) ([]byte, Status) {
+func (m *MemFS) Read(ino, size, off int64, fi *FileInfo) ([]byte, Status) {
 	n, err := m.fileNode(ino)
 	if err != OK {
 		return nil, err
@@ -393,7 +393,7 @@ func (m *MemFs) Read(ino, size, off int64, fi *FileInfo) ([]byte, Status) {
 }
 
 // Write stores data to a file.
-func (m *MemFs) Write(p []byte, ino int64, off int64, fi *FileInfo) (int, Status) {
+func (m *MemFS) Write(p []byte, ino int64, off int64, fi *FileInfo) (int, Status) {
 	n, err := m.fileNode(ino)
 	if err != OK {
 		return 0, err
