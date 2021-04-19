@@ -1,4 +1,4 @@
-image: golang:1.12
+image: golang:1.15
 
 variables:
   GOFLAGS: -mod=readonly
@@ -10,27 +10,27 @@ cache:
 before_script:
   - apt-get update
   - apt-get install -y
-      fuse
-      libfuse-dev
+    fuse
+    libfuse-dev
   - apt-get clean
 
 stages:
-    - dependencies
-    - test
+  - dependencies
+  - test
 
 .modcache: &modcache
-    key: modcache
-    paths:
-        - vendor/
+  key: modcache
+  paths:
+    - vendor/
 
 dependencies:
-    stage: dependencies
-    script: go mod download
-    cache: *modcache
+  stage: dependencies
+  script: go mod download
+  cache: *modcache
 
 test:
-    stage: test
-    script: make race
-    cache:
-        <<: *modcache
-        policy: pull
+  stage: test
+  script: make race
+  cache:
+    <<: *modcache
+    policy: pull
