@@ -11,8 +11,7 @@ package fuse
 //   type MyFs struct {
 //     fuse.DefaultFileSystem
 //   }
-type DefaultFileSystem struct {
-}
+type DefaultFileSystem struct{}
 
 var _ FileSystem = &DefaultFileSystem{}
 

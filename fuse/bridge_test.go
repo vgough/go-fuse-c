@@ -52,6 +52,7 @@ func TestLookup(t *testing.T) {
 			default:
 				t.Errorf("Unexpected reply: %#v", r)
 			}
+
 			return int(OK)
 		})
 	})
@@ -91,7 +92,7 @@ func TestGetAttr(t *testing.T) {
 	t.Run("GetAttr on existing directory", func(t *testing.T) {
 		bridgeGetAttr(fsID, 1, func(id int, r interface{}) int {
 			require.IsType(t, &replyAttr{}, r)
-			a := r.(*replyAttr)
+			a, _ := r.(*replyAttr)
 			stat := a.attr
 			require.NotNil(t, stat)
 			require.EqualValues(t, 1, stat.st_ino)

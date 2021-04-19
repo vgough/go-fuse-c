@@ -399,8 +399,7 @@ func (m *MemFS) Write(p []byte, ino int64, off int64, fi *FileInfo) (int, Status
 		return 0, err
 	}
 
-	rl := int(off) + len(p)
-	if rl > len(n.file.data) {
+	if rl := int(off) + len(p); rl > len(n.file.data) {
 		// Extend
 		newSlice := make([]byte, rl)
 		copy(newSlice, n.file.data)

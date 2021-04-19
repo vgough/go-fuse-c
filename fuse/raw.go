@@ -217,11 +217,11 @@ type FileInfo struct {
 	Writepage bool
 	// Bitfields not supported by CGO.
 	// TODO: create separate wrapper?
-	//DirectIo     bool
-	//KeepCache    bool
-	//Flush        bool
-	//NonSeekable  bool
-	//FlockRelease bool
+	// DirectIo     bool
+	// KeepCache    bool
+	// Flush        bool
+	// NonSeekable  bool
+	// FlockRelease bool
 	Handle    uint64
 	LockOwner uint64
 }

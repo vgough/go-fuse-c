@@ -46,6 +46,7 @@ func (a *InoAttr) toCStat(o *C.struct_stat, timeout *C.double) {
 	if a.GID != nil {
 		o.st_gid = C.__gid_t(*a.GID)
 	}
+
 	toCTime(&o.st_ctim, a.CTime)
 	toCTime(&o.st_mtim, a.MTime)
 	toCTime(&o.st_atim, a.ATime)
