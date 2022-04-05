@@ -264,7 +264,7 @@ func ll_Read(id C.int, req C.fuse_req_t, ino C.fuse_ino_t, size C.size_t, off C.
 	}
 
 	ptr := unsafe.Pointer(&buf[0])
-	return C.reply_buf(req, (*C.char)(ptr), size)
+	return C.reply_buf(req, (*C.char)(ptr), C.size_t(len(buf)))
 }
 
 //export ll_Write
