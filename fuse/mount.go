@@ -29,3 +29,9 @@ func MountAndRun(args []string, fs FileSystem) int {
 	argc := C.int(len(argv))
 	return int(C.MountAndRun(C.int(id), argc, &argv[0]))
 }
+
+func UMount(mountpoint string) {
+	arg := C.CString(mountpoint)
+
+	C.fuse_unmount(arg, nil)
+}
