@@ -277,9 +277,9 @@ void bridge_symlink(fuse_req_t req, const char *link, fuse_ino_t parent, const c
 }
 
 void bridge_rename(fuse_req_t req, fuse_ino_t parent, const char *name, fuse_ino_t newparent,
-                   const char *newname) {
+                   const char *newname, unsigned int flags) {
   int id = get_fsid(req);
-  int err = ll_Rename(id, parent, (char *)name, newparent, (char *)newname);
+  int err = ll_Rename(id, parent, (char *)name, newparent, (char *)newname, flags);
   reply_err(req, err);
 }
 

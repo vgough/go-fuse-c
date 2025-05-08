@@ -9,8 +9,8 @@
 #include <osxfuse/fuse/fuse_lowlevel.h>  // IWYU pragma: export
 
 #else
-#define FUSE_USE_VERSION 29
-#include <fuse/fuse_lowlevel.h>  // IWYU pragma: export
+#define FUSE_USE_VERSION 35
+#include <fuse_lowlevel.h>  // IWYU pragma: export
 
 #endif
 
@@ -43,5 +43,10 @@ void FillTimespec(struct timespec *out, time_t sec, unsigned long nsec);
 void enable_bridge_test_mode();
 
 int reply_buf(fuse_req_t req, char *buf, size_t size);
+
+// CGO can't access bigfields, so provide a helper.
+static inline int get_writepage(struct fuse_file_info *fi) {
+  return fi->writepage;
+}
 
 #endif  // _WRAPPER_H_

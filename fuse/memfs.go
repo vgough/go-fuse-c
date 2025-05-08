@@ -324,7 +324,7 @@ func (m *MemFS) Rmdir(dir int64, name string) Status {
 }
 
 // Rename changes names.
-func (m *MemFS) Rename(dir int64, name string, newdir int64, newname string) Status {
+func (m *MemFS) Rename(dir int64, name string, newdir int64, newname string, flags int) Status {
 	od, err := m.dirNode(dir)
 	if err != OK {
 		return err

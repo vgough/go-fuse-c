@@ -23,8 +23,8 @@ void bridge_mkdir(fuse_req_t req, fuse_ino_t parent, const char *name, mode_t mo
 void bridge_unlink(fuse_req_t req, fuse_ino_t parent, const char *name);
 void bridge_rmdir(fuse_req_t req, fuse_ino_t parent, const char *name);
 void bridge_symlink(fuse_req_t req, const char *link, fuse_ino_t parent, const char *name);
-void bridge_rename(fuse_req_t req, fuse_ino_t parent, const char *name, fuse_ino_t newparent,
-                   const char *newname);
+void bridge_rename(fuse_req_t req, fuse_ino_t parent, const char *name,
+			       fuse_ino_t newparent, const char *newname, unsigned int flags);
 void bridge_link(fuse_req_t req, fuse_ino_t ino, fuse_ino_t newparent, const char *newname);
 void bridge_open(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi);
 void bridge_read(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off, struct fuse_file_info *fi);
