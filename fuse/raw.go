@@ -114,7 +114,7 @@ type FileSystem interface {
 	Rmdir(parent int64, name string) Status
 
 	// Rename renames a file or directory.
-	Rename(dir int64, name string, newdir int64, newname string) Status
+	Rename(dir int64, name string, newdir int64, newname string, flags int) Status
 
 	// Symlink creates a symbolic link.
 	Symlink(link string, parent int64, name string) (*Entry, Status)

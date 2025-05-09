@@ -406,10 +406,10 @@ func ll_Unlink(id C.int, dir C.fuse_ino_t, name *C.char) C.int {
 
 //export ll_Rename
 func ll_Rename(id C.int, dir C.fuse_ino_t, name *C.char,
-	newdir C.fuse_ino_t, newname *C.char) C.int {
+	newdir C.fuse_ino_t, newname *C.char, flags C.int) C.int {
 
 	fs := getFS(int(id))
-	err := fs.Rename(int64(dir), C.GoString(name), int64(newdir), C.GoString(newname))
+	err := fs.Rename(int64(dir), C.GoString(name), int64(newdir), C.GoString(newname), int(flags))
 	return C.int(err)
 }
 
@@ -431,7 +431,7 @@ func newFileInfo(fi *C.struct_fuse_file_info) *FileInfo {
 
 	return &FileInfo{
 		Flags:     int(fi.flags),
-		Writepage: fi.writepage != 0,
+		Writepage: C.get_writepage(fi) != 0,
 		Handle:    uint64(fi.fh),
 		LockOwner: uint64(fi.lock_owner),
 	}

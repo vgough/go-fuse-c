@@ -142,7 +142,7 @@ func (d *DefaultFileSystem) Link(ino int64, newparent int64, name string) (*Entr
 }
 
 // Rename implements FileSystem.
-func (d *DefaultFileSystem) Rename(int64, string, int64, string) Status {
+func (d *DefaultFileSystem) Rename(int64, string, int64, string, int) Status {
 	return ENOSYS
 }
 

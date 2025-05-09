@@ -1,6 +1,6 @@
 package fuse
 
-// #cgo LDFLAGS: -lfuse
+// #cgo pkg-config: fuse3
 //
 // #include "wrapper.h"
 // #include <stdlib.h>  // for free()

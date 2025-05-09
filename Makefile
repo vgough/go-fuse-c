@@ -1,14 +1,11 @@
 PROJECT_NAME := "go-fuse-c"
 PKG := "github.com/vgough/$(PROJECT_NAME)"
-PKG_LIST := $(shell go list ${PKG}/... | grep -v /vendor/)
-GO_FILES := $(shell find . -name '*.go' | grep -v /vendor/ | grep -v _test.go)
+PKG_LIST := $(shell go list ${PKG}/...)
+GO_FILES := $(shell find . -name '*.go' | grep -v _test.go)
 
 .PHONY: all dep build clean test lint
 
 all: build
-
-vendor:
-	GO111MODULE=on go mod vendor
 
 lint: ## Lint the files
 	@golint -set_exit_status ${PKG_LIST}
