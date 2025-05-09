@@ -44,7 +44,7 @@ void enable_bridge_test_mode();
 
 int reply_buf(fuse_req_t req, char *buf, size_t size);
 
-// CGO can't access bigfields, so provide a helper.
+// CGO can't access C bitfields, so provide a helper.
 static inline int get_writepage(struct fuse_file_info *fi) { return fi->writepage; }
 
 #endif  // _WRAPPER_H_
