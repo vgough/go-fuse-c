@@ -1,6 +1,66 @@
 {
   "lockfile_version": "1",
   "packages": {
+    "fuse3@3.16.2": {
+      "last_modified": "2025-05-07T00:09:58Z",
+      "resolved": "github:NixOS/nixpkgs/b3582c75c7f21ce0b429898980eddbbf05c68e55#fuse3",
+      "source": "devbox-search",
+      "version": "3.16.2",
+      "systems": {
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "bin",
+              "path": "/nix/store/69pyi63b3jklck64wnv6q8s80kdw1r6b-fuse-3.16.2-bin",
+              "default": true
+            },
+            {
+              "name": "udev",
+              "path": "/nix/store/wal8am0dri5l6amjab02a176jfs35x3i-fuse-3.16.2-udev"
+            },
+            {
+              "name": "dev",
+              "path": "/nix/store/zizmv7gg5lxngw58avikccs8bhcgg3g0-fuse-3.16.2-dev"
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/v7g7ibw1qzgls930jx23lqgvrjcd9zgp-fuse-3.16.2-man"
+            },
+            {
+              "name": "out",
+              "path": "/nix/store/qfclwhq37parkn5qj9lf4a2chxplf53a-fuse-3.16.2"
+            }
+          ],
+          "store_path": "/nix/store/69pyi63b3jklck64wnv6q8s80kdw1r6b-fuse-3.16.2-bin"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "bin",
+              "path": "/nix/store/ny6620iw79j6qr1xddjdc8b8dykpmva6-fuse-3.16.2-bin",
+              "default": true
+            },
+            {
+              "name": "udev",
+              "path": "/nix/store/j6fk9q8zq2slpihwir9mv4ijlpb1r9rc-fuse-3.16.2-udev"
+            },
+            {
+              "name": "dev",
+              "path": "/nix/store/y470mvdgmjyvg958720mlgky8jhli4d3-fuse-3.16.2-dev"
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/4ra917djqdnp8r6xfz0idwvccymr27ww-fuse-3.16.2-man"
+            },
+            {
+              "name": "out",
+              "path": "/nix/store/90l74wy9iryihvxbvprpi53kia9qrww5-fuse-3.16.2"
+            }
+          ],
+          "store_path": "/nix/store/ny6620iw79j6qr1xddjdc8b8dykpmva6-fuse-3.16.2-bin"
+        }
+      }
+    },
     "github:NixOS/nixpkgs/nixpkgs-unstable": {
       "resolved": "github:NixOS/nixpkgs/b3582c75c7f21ce0b429898980eddbbf05c68e55?lastModified=1746576598&narHash=sha256-FshoQvr6Aor5SnORVvh%2FZdJ1Sa2U4ZrIMwKBX5k2wu0%3D"
     },

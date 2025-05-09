@@ -1,9 +1,10 @@
 {
-  "$schema": "https://raw.githubusercontent.com/jetpack-io/devbox/0.14.1/.schema/devbox.schema.json",
+  "$schema": "https://raw.githubusercontent.com/jetpack-io/devbox/0.14.2/.schema/devbox.schema.json",
   "packages": [
     "go-task@latest",
     "go@1.24",
     "revive@latest",
-    "golangci-lint@2.0.0"
+    "golangci-lint@2.0.0",
+    "fuse3@3.16.2"
   ]
 }
