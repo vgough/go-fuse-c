@@ -4,15 +4,12 @@
 #define _FILE_OFFSET_BITS 64
 
 #if defined(__APPLE__)
-// OSXFuse recommends version 26 for new applications.
 #define FUSE_USE_VERSION 26
-#include <osxfuse/fuse/fuse_lowlevel.h>  // IWYU pragma: export
-
 #else
 #define FUSE_USE_VERSION 35
-#include <fuse_lowlevel.h>  // IWYU pragma: export
-
 #endif
+
+#include <fuse_lowlevel.h>  // IWYU pragma: export
 
 #include <sys/types.h>  // for off_t
 
