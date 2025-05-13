@@ -1,9 +1,7 @@
 package fuse
 
-// TODO: don't hardcode the fuse-t path or version!
-
-// #cgo CFLAGS: -I"/Library/Application Support/fuse-t/include/fuse"
-// #cgo LDFLAGS: -L"/Library/Application Support/fuse-t/lib" -lfuse-t-1.0.47
+// #cgo pkg-config: fuse-t
+// #cgo CFLAGS: -I/Library/Frameworks/fuse_t.framework/Headers
 //
 // #include "wrapper.h"
 // #include <stdlib.h>  // for free()

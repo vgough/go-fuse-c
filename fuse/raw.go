@@ -267,7 +267,7 @@ type Entry struct {
 	//
 	// The generation must be non-zero, otherwise FUSE will treat
 	// it as an error.
-	Generation int64
+	Generation uint64
 
 	// Inode attributes.
 	Attr *InoAttr

@@ -1,7 +1,6 @@
 package fuse
 
 import (
-	"reflect"
 	"sync"
 	"time"
 	"unsafe"
@@ -13,9 +12,11 @@ import "C"
 
 // State which tracks instances of FileSystem, with a unique identifier used
 // by C code.  This avoids passing Go pointers into C code.
-var fsMapLock sync.RWMutex
-var rawFSMap = make(map[int]FileSystem)
-var nextFSID = 1
+var (
+	fsMapLock sync.RWMutex
+	rawFSMap  = make(map[int]FileSystem)
+	nextFSID  = 1
+)
 
 // enableBridgeTestMode can be used to enable the global bridge test mode.
 // This prevents fuse_reply callbacks, since there is no active FUSE filesystem.
@@ -66,12 +67,7 @@ func Version() int {
 // zeroCopyBuf creates a byte array backed by a C buffer.
 func zeroCopyBuf(buf unsafe.Pointer, size int) []byte {
 	// Create slice backed by C buffer.
-	hdr := reflect.SliceHeader{
-		Data: uintptr(buf),
-		Len:  size,
-		Cap:  size,
-	}
-	return *(*[]byte)(unsafe.Pointer(&hdr))
+	return unsafe.Slice((*byte)(buf), size)
 }
 
 //export ll_Init
@@ -111,8 +107,8 @@ func ll_StatFS(id C.int, ino C.fuse_ino_t, stat *C.struct_statvfs) C.int {
 
 //export ll_SetXAttr
 func ll_SetXAttr(id C.int, ino C.fuse_ino_t, name *C.char, value unsafe.Pointer,
-	size C.size_t, flags C.int) C.int {
-
+	size C.size_t, flags C.int,
+) C.int {
 	fs := getFS(int(id))
 	data := zeroCopyBuf(value, int(size))
 	err := fs.SetXAttr(int64(ino), C.GoString(name), data, int(flags))
@@ -121,8 +117,8 @@ func ll_SetXAttr(id C.int, ino C.fuse_ino_t, name *C.char, value unsafe.Pointer,
 
 //export ll_GetXAttr
 func ll_GetXAttr(id C.int, ino C.fuse_ino_t, name *C.char, buf unsafe.Pointer,
-	size *C.size_t) C.int {
-
+	size *C.size_t,
+) C.int {
 	fs := getFS(int(id))
 	var err Status
 	var outSize int
@@ -140,8 +136,8 @@ func ll_GetXAttr(id C.int, ino C.fuse_ino_t, name *C.char, buf unsafe.Pointer,
 
 //export ll_Lookup
 func ll_Lookup(id C.int, dir C.fuse_ino_t, name *C.char,
-	cent *C.struct_fuse_entry_param) C.int {
-
+	cent *C.struct_fuse_entry_param,
+) C.int {
 	fs := getFS(int(id))
 	ent, err := fs.Lookup(int64(dir), C.GoString(name))
 	if err == OK {
@@ -158,8 +154,8 @@ func ll_Forget(id C.int, ino C.fuse_ino_t, n C.int) {
 
 //export ll_GetAttr
 func ll_GetAttr(id C.int, ino C.fuse_ino_t, fi *C.struct_fuse_file_info,
-	cattr *C.struct_stat, ctimeout *C.double) C.int {
-
+	cattr *C.struct_stat, ctimeout *C.double,
+) C.int {
 	fs := getFS(int(id))
 	attr, err := fs.GetAttr(int64(ino), newFileInfo(fi))
 	if err == OK {
@@ -170,8 +166,8 @@ func ll_GetAttr(id C.int, ino C.fuse_ino_t, fi *C.struct_fuse_file_info,
 
 //export ll_SetAttr
 func ll_SetAttr(id C.int, ino C.fuse_ino_t, attr *C.struct_stat, toSet C.int,
-	fi *C.struct_fuse_file_info, cattr *C.struct_stat, ctimeout *C.double) C.int {
-
+	fi *C.struct_fuse_file_info, cattr *C.struct_stat, ctimeout *C.double,
+) C.int {
 	fs := getFS(int(id))
 	var ia InoAttr
 	ia.fromCStat(attr)
@@ -184,8 +180,8 @@ func ll_SetAttr(id C.int, ino C.fuse_ino_t, attr *C.struct_stat, toSet C.int,
 
 //export ll_ReadDir
 func ll_ReadDir(id C.int, ino C.fuse_ino_t, size C.size_t, off C.off_t,
-	fi *C.struct_fuse_file_info, db *C.struct_DirBuf) C.int {
-
+	fi *C.struct_fuse_file_info, db *C.struct_DirBuf,
+) C.int {
 	fs := getFS(int(id))
 	writer := &dirBuf{db}
 	err := fs.ReadDir(int64(ino), newFileInfo(fi), int64(off), int(size), writer)
@@ -253,8 +249,8 @@ func ll_Flush(id C.int, ino C.fuse_ino_t, fi *C.struct_fuse_file_info) C.int {
 
 //export ll_Read
 func ll_Read(id C.int, req C.fuse_req_t, ino C.fuse_ino_t, size C.size_t, off C.off_t,
-	fi *C.struct_fuse_file_info) C.int {
-
+	fi *C.struct_fuse_file_info,
+) C.int {
 	fs := getFS(int(id))
 
 	// Create slice backed by C buffer.
@@ -269,8 +265,8 @@ func ll_Read(id C.int, req C.fuse_req_t, ino C.fuse_ino_t, size C.size_t, off C.
 
 //export ll_Write
 func ll_Write(id C.int, ino C.fuse_ino_t, buf unsafe.Pointer, n *C.size_t, off C.off_t,
-	fi *C.struct_fuse_file_info) C.int {
-
+	fi *C.struct_fuse_file_info,
+) C.int {
 	fs := getFS(int(id))
 	in := zeroCopyBuf(buf, int(*n))
 	written, err := fs.Write(in, int64(ino), int64(off), newFileInfo(fi))
@@ -282,8 +278,8 @@ func ll_Write(id C.int, ino C.fuse_ino_t, buf unsafe.Pointer, n *C.size_t, off C
 
 //export ll_Mknod
 func ll_Mknod(id C.int, dir C.fuse_ino_t, name *C.char, mode C.mode_t,
-	rdev C.dev_t, cent *C.struct_fuse_entry_param) C.int {
-
+	rdev C.dev_t, cent *C.struct_fuse_entry_param,
+) C.int {
 	fs := getFS(int(id))
 	ent, err := fs.Mknod(int64(dir), C.GoString(name), int(mode), int(rdev))
 	if err == OK {
@@ -333,8 +329,8 @@ func ll_Access(id C.int, ino C.fuse_ino_t, mask C.int) C.int {
 
 //export ll_Create
 func ll_Create(id C.int, dir C.fuse_ino_t, name *C.char, mode C.mode_t,
-	fi *C.struct_fuse_file_info, cent *C.struct_fuse_entry_param) C.int {
-
+	fi *C.struct_fuse_file_info, cent *C.struct_fuse_entry_param,
+) C.int {
 	fs := getFS(int(id))
 	info := newFileInfo(fi)
 	ent, err := fs.Create(int64(dir), C.GoString(name), int(mode), info)
@@ -347,8 +343,8 @@ func ll_Create(id C.int, dir C.fuse_ino_t, name *C.char, mode C.mode_t,
 
 //export ll_Mkdir
 func ll_Mkdir(id C.int, dir C.fuse_ino_t, name *C.char, mode C.mode_t,
-	cent *C.struct_fuse_entry_param) C.int {
-
+	cent *C.struct_fuse_entry_param,
+) C.int {
 	fs := getFS(int(id))
 	ent, err := fs.Mkdir(int64(dir), C.GoString(name), int(mode))
 	if err == OK {
@@ -366,7 +362,8 @@ func ll_Rmdir(id C.int, dir C.fuse_ino_t, name *C.char) C.int {
 
 //export ll_Symlink
 func ll_Symlink(id C.int, link *C.char, parent C.fuse_ino_t, name *C.char,
-	cent *C.struct_fuse_entry_param) C.int {
+	cent *C.struct_fuse_entry_param,
+) C.int {
 	fs := getFS(int(id))
 	ent, err := fs.Symlink(C.GoString(link), int64(parent), C.GoString(name))
 	if err == OK {
@@ -377,7 +374,8 @@ func ll_Symlink(id C.int, link *C.char, parent C.fuse_ino_t, name *C.char,
 
 //export ll_Link
 func ll_Link(id C.int, ino C.fuse_ino_t, newparent C.fuse_ino_t, name *C.char,
-	cent *C.struct_fuse_entry_param) C.int {
+	cent *C.struct_fuse_entry_param,
+) C.int {
 	fs := getFS(int(id))
 	ent, err := fs.Link(int64(ino), int64(newparent), C.GoString(name))
 	if err == OK {
@@ -406,8 +404,8 @@ func ll_Unlink(id C.int, dir C.fuse_ino_t, name *C.char) C.int {
 
 //export ll_Rename
 func ll_Rename(id C.int, dir C.fuse_ino_t, name *C.char,
-	newdir C.fuse_ino_t, newname *C.char, flags C.int) C.int {
-
+	newdir C.fuse_ino_t, newname *C.char, flags C.int,
+) C.int {
 	fs := getFS(int(id))
 	err := fs.Rename(int64(dir), C.GoString(name), int64(newdir), C.GoString(newname), int(flags))
 	return C.int(err)
@@ -440,6 +438,9 @@ func newFileInfo(fi *C.struct_fuse_file_info) *FileInfo {
 func (e *Entry) toCEntry(o *C.struct_fuse_entry_param) {
 	o.ino = C.fuse_ino_t(e.Ino)
 	o.generation = C.ulong(e.Generation)
+	if o.generation == 0 {
+		o.generation = 1 // FUSE doesn't like a 0 generation value.
+	}
 	e.Attr.toCStat(&o.attr, nil)
 	o.attr_timeout = C.double(e.AttrTimeout)
 	o.entry_timeout = C.double(e.EntryTimeout)
