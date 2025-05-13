@@ -1,8 +1,11 @@
 package fuse
 
 import (
+	"log/slog"
 	"time"
 )
+
+const attrTimeout = 60.0
 
 type memDir struct {
 	parent *iNode
@@ -28,12 +31,34 @@ type iNode struct {
 	mode int
 }
 
+func (i *iNode) stat() *InoAttr {
+	stat := &InoAttr{
+		Ino:     i.id,
+		Timeout: attrTimeout,
+		Mode:    i.mode,
+		NLink:   1,
+		CTime:   i.ctime,
+		MTime:   i.mtime,
+		ATime:   i.mtime,
+	}
+
+	if i.dir != nil {
+		stat.Size = int64(len(i.dir.nodes))
+		stat.Mode |= S_IFDIR
+	} else {
+		stat.Size = int64(len(i.file.data))
+		stat.Mode |= S_IFREG
+	}
+	return stat
+}
+
 // MemFS implements an in-memory filesystem.
 //
 // Directories are stored as an in-memory hash table.  Files are stored as byte arrays.
 type MemFS struct {
 	DefaultFileSystem
 
+	gen    uint64
 	inodes map[int64]*iNode
 	nextID int64
 }
@@ -44,6 +69,7 @@ func NewMemFS() *MemFS {
 	m := &MemFS{
 		inodes: make(map[int64]*iNode),
 		nextID: 2, // inode 1 is reserved for the root directory.
+		gen:    uint64(time.Now().UnixMicro()),
 	}
 	now := time.Now()
 	m.inodes[1] = &iNode{
@@ -51,9 +77,19 @@ func NewMemFS() *MemFS {
 		dir:   root,
 		ctime: now,
 		mtime: now,
-		mode:  0777 | S_IFDIR,
+		mode:  0o777,
 	}
 	return m
+}
+
+func (m *MemFS) entry(node *iNode) *Entry {
+	return &Entry{
+		Ino:          node.id,
+		Generation:   m.gen,
+		Attr:         node.stat(),
+		AttrTimeout:  attrTimeout,
+		EntryTimeout: attrTimeout,
+	}
 }
 
 func (m *MemFS) dirNode(parent int64) (*iNode, Status) {
@@ -80,6 +116,7 @@ func (m *MemFS) fileNode(ino int64) (*iNode, Status) {
 
 // Mknod creates nodes.
 func (m *MemFS) Mknod(dir int64, name string, mode int, rdev int) (*Entry, Status) {
+	slog.Debug("Mknod", "dir", dir, "name", name, "mode", mode, "rdev", rdev)
 
 	n, err := m.dirNode(dir)
 	if err != OK {
@@ -96,26 +133,26 @@ func (m *MemFS) Mknod(dir int64, name string, mode int, rdev int) (*Entry, Statu
 	d.nodes[name] = i
 
 	now := time.Now()
-	m.inodes[i] = &iNode{
+	node := &iNode{
+		id: i,
 		file: &memFile{
 			data: make([]byte, 0),
 		},
 		ctime: now,
 		mtime: now,
-		mode:  mode | S_IFREG,
+		mode:  mode,
 	}
+	m.inodes[i] = node
+	return m.entry(node), OK
+}
 
-	e := &Entry{
-		Ino:          i,
-		Attr:         m.stat(i),
-		AttrTimeout:  1.0,
-		EntryTimeout: 1.0,
-	}
-	return e, OK
+func (m *MemFS) Create(dir int64, name string, mode int, fi *FileInfo) (*Entry, Status) {
+	return m.Mknod(dir, name, mode, 0)
 }
 
 // Mkdir create directories.
 func (m *MemFS) Mkdir(dir int64, name string, mode int) (*Entry, Status) {
+	slog.Debug("Mkdir", "dir", dir, "name", name, "mode", mode)
 
 	n, err := m.dirNode(dir)
 	if err != OK {
@@ -132,62 +169,36 @@ func (m *MemFS) Mkdir(dir int64, name string, mode int) (*Entry, Status) {
 	d.nodes[name] = i
 
 	now := time.Now()
-	m.inodes[i] = &iNode{
+	node := &iNode{
+		id: i,
 		dir: &memDir{
 			parent: n,
 			nodes:  make(map[string]int64),
 		},
 		ctime: now,
 		mtime: now,
-		mode:  mode | S_IFDIR,
+		mode:  mode,
 	}
-
-	e := &Entry{
-		Ino:          i,
-		Attr:         m.stat(i),
-		AttrTimeout:  1.0,
-		EntryTimeout: 1.0,
-	}
-	return e, OK
-}
-
-func (m *MemFS) stat(ino int64) *InoAttr {
-	i := m.inodes[ino]
-	if i == nil {
-		return nil
-	}
-
-	stat := &InoAttr{
-		Ino:     ino,
-		Timeout: 1.0,
-		Mode:    i.mode,
-		NLink:   1,
-		CTime:   i.ctime,
-		MTime:   i.mtime,
-		ATime:   i.mtime,
-	}
-
-	if i.dir != nil {
-		stat.Size = int64(len(i.dir.nodes))
-	} else {
-		stat.Size = int64(len(i.file.data))
-	}
-
-	return stat
+	m.inodes[i] = node
+	return m.entry(node), OK
 }
 
 // GetAttr returns node attributes.
 func (m *MemFS) GetAttr(ino int64, info *FileInfo) (attr *InoAttr, err Status) {
-	s := m.stat(ino)
-	if s == nil {
+	slog.Debug("GetAttr", "ino", ino)
+
+	i := m.inodes[ino]
+	if i == nil {
 		return nil, ENOENT
 	}
-	return s, OK
+	return i.stat(), OK
 }
 
 // SetAttr changes node attributes.
 func (m *MemFS) SetAttr(ino int64, attr *InoAttr, mask SetAttrMask, fi *FileInfo) (
-	*InoAttr, Status) {
+	*InoAttr, Status,
+) {
+	slog.Debug("SetAttr", "ino", ino, "attr", attr, "mask", mask, "fi", fi)
 
 	i := m.inodes[ino]
 	if i == nil {
@@ -216,12 +227,13 @@ func (m *MemFS) SetAttr(ino int64, attr *InoAttr, mask SetAttrMask, fi *FileInfo
 		}
 	}
 
-	s := m.stat(ino)
-	return s, OK
+	return i.stat(), OK
 }
 
 // Lookup finds node by name.
 func (m *MemFS) Lookup(parent int64, name string) (entry *Entry, err Status) {
+	slog.Debug("Lookup", "parent", parent, "name", name)
+
 	n, err := m.dirNode(parent)
 	if err != OK {
 		return nil, err
@@ -231,19 +243,14 @@ func (m *MemFS) Lookup(parent int64, name string) (entry *Entry, err Status) {
 	if !exist {
 		return nil, ENOENT
 	}
-
-	e := &Entry{
-		Ino:          i,
-		Attr:         m.stat(i),
-		AttrTimeout:  1.0,
-		EntryTimeout: 1.0,
-	}
-
-	return e, OK
+	node := m.inodes[i]
+	return m.entry(node), OK
 }
 
 // StatFS returns filesystem stats.
 func (m *MemFS) StatFS(ino int64) (stat *StatVFS, status Status) {
+	slog.Debug("StatFS", "ino", ino)
+
 	stat = &StatVFS{
 		Files: int64(len(m.inodes)),
 	}
@@ -258,6 +265,8 @@ func (m *MemFS) Flush(ino int64, fi *FileInfo) Status {
 
 // ReadDir reads a directory.
 func (m *MemFS) ReadDir(ino int64, fi *FileInfo, off int64, size int, w DirEntryWriter) Status {
+	slog.Debug("ReadDir", "ino", ino, "off", off, "size", size)
+
 	n, err := m.dirNode(ino)
 	if err != OK {
 		return err
@@ -294,12 +303,16 @@ func (m *MemFS) ReadDir(ino int64, fi *FileInfo, off int64, size int, w DirEntry
 
 // Open opens files.
 func (m *MemFS) Open(ino int64, fi *FileInfo) Status {
+	slog.Debug("Open", "ino", ino, "fi", fi)
+
 	_, err := m.fileNode(ino)
 	return err
 }
 
 // Rmdir removes directories.
 func (m *MemFS) Rmdir(dir int64, name string) Status {
+	slog.Debug("Rmdir", "dir", dir, "name", name)
+
 	n, err := m.dirNode(dir)
 	if err != OK {
 		return err
@@ -325,6 +338,7 @@ func (m *MemFS) Rmdir(dir int64, name string) Status {
 
 // Rename changes names.
 func (m *MemFS) Rename(dir int64, name string, newdir int64, newname string, flags int) Status {
+	slog.Debug("Rename", "dir", dir, "name", name, "newdir", newdir, "newname", newname, "flags", flags)
 	od, err := m.dirNode(dir)
 	if err != OK {
 		return err
@@ -355,6 +369,8 @@ func (m *MemFS) Rename(dir int64, name string, newdir int64, newname string, fla
 
 // Unlink removes files.
 func (m *MemFS) Unlink(dir int64, name string) Status {
+	slog.Debug("Unlink", "dir", dir, "name", name)
+
 	n, err := m.dirNode(dir)
 	if err != OK {
 		return err
@@ -376,6 +392,8 @@ func (m *MemFS) Unlink(dir int64, name string) Status {
 
 // Read loads data from a file.
 func (m *MemFS) Read(ino, size, off int64, fi *FileInfo) ([]byte, Status) {
+	slog.Debug("Read", "ino", ino, "size", size, "off", off, "fi", fi)
+
 	n, err := m.fileNode(ino)
 	if err != OK {
 		return nil, err
@@ -394,6 +412,8 @@ func (m *MemFS) Read(ino, size, off int64, fi *FileInfo) ([]byte, Status) {
 
 // Write stores data to a file.
 func (m *MemFS) Write(p []byte, ino int64, off int64, fi *FileInfo) (int, Status) {
+	slog.Debug("Write", "ino", ino, "off", off, "fi", fi)
+
 	n, err := m.fileNode(ino)
 	if err != OK {
 		return 0, err

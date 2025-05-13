@@ -8,9 +8,10 @@ package fuse
 // all methods not implemented by the derived type will be handled here.
 //
 // Usage eXAmple:
-//   type MyFs struct {
-//     fuse.DefaultFileSystem
-//   }
+//
+//	type MyFs struct {
+//	  fuse.DefaultFileSystem
+//	}
 type DefaultFileSystem struct{}
 
 var _ FileSystem = &DefaultFileSystem{}
@@ -41,7 +42,7 @@ func (d *DefaultFileSystem) Release(ino int64, fi *FileInfo) Status {
 
 // ReleaseDir implements FileSystem.
 func (d *DefaultFileSystem) ReleaseDir(ino int64, fi *FileInfo) Status {
-	return ENOSYS
+	return 0
 }
 
 // FSync implements FileSystem.
@@ -66,7 +67,8 @@ func (d *DefaultFileSystem) GetAttr(ino int64, fi *FileInfo) (attr *InoAttr, err
 
 // SetAttr implements FileSystem.
 func (d *DefaultFileSystem) SetAttr(ino int64, attr *InoAttr, mask SetAttrMask, fi *FileInfo) (
-	*InoAttr, Status) {
+	*InoAttr, Status,
+) {
 	return nil, ENOSYS
 }
 
@@ -77,13 +79,15 @@ func (d *DefaultFileSystem) ReadLink(ino int64) (string, Status) {
 
 // ReadDir implements FileSystem.
 func (d *DefaultFileSystem) ReadDir(ino int64, fi *FileInfo, off int64, size int,
-	w DirEntryWriter) Status {
+	w DirEntryWriter,
+) Status {
 	return ENOSYS
 }
 
 // Mknod implements FileSystem.
 func (d *DefaultFileSystem) Mknod(p int64, name string, mode int, rdev int) (
-	entry *Entry, err Status) {
+	entry *Entry, err Status,
+) {
 	return nil, ENOSYS
 }
 
@@ -94,7 +98,8 @@ func (d *DefaultFileSystem) Access(ino int64, mode int) Status {
 
 // Create implements FileSystem.
 func (d *DefaultFileSystem) Create(p int64, name string, mode int, fi *FileInfo) (
-	entry *Entry, err Status) {
+	entry *Entry, err Status,
+) {
 	return nil, ENOSYS
 }
 
@@ -110,19 +115,22 @@ func (d *DefaultFileSystem) OpenDir(ino int64, fi *FileInfo) Status {
 
 // Read implements FileSystem.
 func (d *DefaultFileSystem) Read(ino int64, size int64, off int64, fi *FileInfo) (
-	data []byte, err Status) {
+	data []byte, err Status,
+) {
 	return nil, ENOSYS
 }
 
 // Write implements FileSystem.
 func (d *DefaultFileSystem) Write(p []byte, ino int64, off int64, fi *FileInfo) (
-	n int, err Status) {
+	n int, err Status,
+) {
 	return 0, ENOSYS
 }
 
 // Mkdir implements FileSystem.
 func (d *DefaultFileSystem) Mkdir(p int64, name string, mode int) (
-	entry *Entry, err Status) {
+	entry *Entry, err Status,
+) {
 	return nil, ENOSYS
 }
 

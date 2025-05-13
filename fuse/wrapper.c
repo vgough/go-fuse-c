@@ -1,12 +1,7 @@
 #include "bridge.h"
 
-#if defined(__APPLE__)
-#include <osxfuse/fuse/fuse_common.h>  // for fuse_mount, etc
-#include <osxfuse/fuse/fuse_opt.h>     // for fuse_opt_free_args, etc
-#else
 #include <fuse_common.h>
 #include <fuse_lowlevel.h>
-#endif
 
 #include <stdio.h>      // for NULL
 #include <sys/stat.h>   // for stat
@@ -14,6 +9,10 @@
 #include <unistd.h>     // for getgid, getuid
 
 #include "_cgo_export.h"  // IWYU pragma: keep
+
+#if defined(__APPLE__)
+#include <fuse.h>
+#endif
 
 static const struct stat emptyStat;
 
@@ -61,7 +60,37 @@ static struct fuse_lowlevel_ops bridge_ll_ops = {
     //.fallocate
 };
 
-int MountAndRun(int id, int argc, char *argv[]) {
+#if (FUSE_USE_VERSION >= 20 && FUSE_USE_VERSION < 30)
+int fuse2MountAndRun(int id, int argc, char *argv[]) {
+  struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
+	struct fuse_chan *ch;
+	char *mountpoint;
+	int err = -1;
+
+	if (fuse_parse_cmdline(&args, &mountpoint, NULL, NULL) != -1 &&
+	    (ch = fuse_mount(mountpoint, &args)) != NULL) {
+		struct fuse_session *se;
+
+		se = fuse_lowlevel_new(&args, &bridge_ll_ops,
+				       sizeof(bridge_ll_ops), &id);
+		if (se != NULL) {
+			if (fuse_set_signal_handlers(se) != -1) {
+				fuse_session_add_chan(se, ch);
+				err = fuse_session_loop(se);
+				fuse_remove_signal_handlers(se);
+				fuse_session_remove_chan(ch);
+			}
+			fuse_session_destroy(se);
+		}
+		fuse_unmount(mountpoint, ch);
+	}
+	fuse_opt_free_args(&args);
+
+	return err ? 1 : 0;
+}
+
+#else
+int fuse3MountAndRun(int id, int argc, char *argv[]) {
   struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
   struct fuse_session *se;
   struct fuse_cmdline_opts opts;
@@ -119,6 +148,15 @@ err_out1:
   fuse_opt_free_args(&args);
 
   return ret ? 1 : 0;
+}
+#endif
+
+int MountAndRun(int id, int argc, char *argv[]) {
+#if (FUSE_USE_VERSION >= 20 && FUSE_USE_VERSION < 30)
+  return fuse2MountAndRun(id, argc, argv);
+#else
+  return fuse3MountAndRun(id, argc, argv);
+#endif
 }
 
 // Returns 0 on success.

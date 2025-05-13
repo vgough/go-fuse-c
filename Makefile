@@ -8,7 +8,7 @@ GO_FILES := $(shell find . -name '*.go' | grep -v _test.go)
 all: build
 
 lint: ## Lint the files
-	@golint -set_exit_status ${PKG_LIST}
+	revive -config revive.toml ./...
 
 test: ## Run unittests
 	@go test -short ${PKG_LIST}

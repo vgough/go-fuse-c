@@ -1,6 +1,7 @@
 package fuse
 
-// #cgo LDFLAGS: -losxfuse
+// #cgo pkg-config: fuse-t
+// #cgo CFLAGS: -I/Library/Frameworks/fuse_t.framework/Headers
 //
 // #include "wrapper.h"
 // #include <stdlib.h>  // for free()

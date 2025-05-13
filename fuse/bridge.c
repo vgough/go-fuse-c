@@ -276,8 +276,14 @@ void bridge_symlink(fuse_req_t req, const char *link, fuse_ino_t parent, const c
   }
 }
 
+#if defined(__APPLE__)
+void bridge_rename(fuse_req_t req, fuse_ino_t parent, const char *name, fuse_ino_t newparent,
+                   const char *newname) {
+  unsigned int flags = 0;
+#else
 void bridge_rename(fuse_req_t req, fuse_ino_t parent, const char *name, fuse_ino_t newparent,
                    const char *newname, unsigned int flags) {
+#endif
   int id = get_fsid(req);
   int err = ll_Rename(id, parent, (char *)name, newparent, (char *)newname, flags);
   reply_err(req, err);
