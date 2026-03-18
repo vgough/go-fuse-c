@@ -1,0 +1,11 @@
+[package]
+name = "fuse-lowlevel-sys"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+build = "build.rs"
+
+[lib]
+name = "fuse_lowlevel_sys"
+path = "src/lib.rs"

@@ -34,3 +34,15 @@ test:
   cache:
     <<: *modcache
     policy: pull
+
+rust-test:
+  image: rust:1.85
+  stage: test
+  before_script:
+    - apt-get update
+    - apt-get install -y clang pkg-config libfuse3-dev
+    - apt-get clean
+  script:
+    - cd rust
+    - cargo check --all-targets
+    - cargo test --no-run --all-targets

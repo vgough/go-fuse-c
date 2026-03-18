@@ -3,7 +3,7 @@ PKG := "github.com/vgough/$(PROJECT_NAME)"
 PKG_LIST := $(shell go list ${PKG}/...)
 GO_FILES := $(shell find . -name '*.go' | grep -v _test.go)
 
-.PHONY: all dep build clean test lint
+.PHONY: all dep build clean test lint rust-docker-test
 
 all: build
 
@@ -24,5 +24,8 @@ dep: ## Get the dependencies
 
 build: dep ## Build the binary file
 	@go build -i -v $(PKG)
+
+rust-docker-test: ## Run the Rust hello smoke test in a Linux Docker container
+	@bash rust/tests/linux/run-in-docker.sh
 
   

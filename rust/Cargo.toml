@@ -1,0 +1,12 @@
+[workspace]
+members = [
+  "fuse-lowlevel",
+  "fuse-lowlevel-sys",
+]
+resolver = "3"
+
+[workspace.package]
+edition = "2024"
+license = "Apache-2.0"
+repository = "https://github.com/vgough/go-fuse-c"
+version = "0.1.0"

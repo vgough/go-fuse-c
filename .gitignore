@@ -29,3 +29,6 @@ _testmain.go
 *.prof
 
 .*.swp
+
+rust/target/
+rust/Cargo.lock
