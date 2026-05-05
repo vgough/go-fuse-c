@@ -70,12 +70,13 @@ func (h *helloFS) Lookup(parent int64, name string) (
 	return e, fuse.OK
 }
 
-func (h *helloFS) StatFs(ino int64) (stat *fuse.StatVFS, err fuse.Status) {
-	fmt.Println("statfs", ino)
+func (h *helloFS) StatFS(ino int64) (stat *fuse.StatVFS, err fuse.Status) {
+	fmt.Println("StatFS", ino)
 	stat = &fuse.StatVFS{
-		Files:     1,
+		Files:     2,
 		FilesFree: 0,
 		Flags:     fuse.ST_RDONLY,
+		NameMax:   255,
 	}
 	err = fuse.OK
 	return
