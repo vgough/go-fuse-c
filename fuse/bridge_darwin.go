@@ -1,7 +1,6 @@
 package fuse
 
-// #cgo pkg-config: fuse-t
-// #cgo CFLAGS: -I/Library/Frameworks/fuse_t.framework/Headers
+// #cgo pkg-config: fuse
 //
 // #include "wrapper.h"
 // #include <stdlib.h>  // for free()

@@ -6,6 +6,12 @@ go-fuse-c
 
 CGO wrapper for FUSE C low-level API.
 
+## Requirements
+
+On Linux, install libfuse 3 and its development headers. On Darwin, install
+[macFUSE](https://macfuse.github.io/). The Darwin build uses the FUSE 2
+compatibility API provided by macFUSE through its `fuse` pkg-config module.
+
 # Purpose
 
 After running into trouble getting a couple "pure-Go" FUSE wrappers working, I
